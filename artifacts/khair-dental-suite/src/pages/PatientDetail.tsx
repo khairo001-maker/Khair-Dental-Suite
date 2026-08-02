@@ -1,256 +1,110 @@
-import { useParams, Link } from "wouter";
 import { Layout } from "@/components/Layout";
-import { dataStore } from "@/data/mockData";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { useLanguage } from "@/i18n";
+import { useDataStore } from "@/store/DataStore";
+import { useParams, Link } from "wouter";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { EmptyState } from "@/components/EmptyState";
+import { ClipboardList, Smile, ScanLine, Camera, CreditCard, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, Calendar, FileText, Activity, Phone, Mail, MapPin, AlertTriangle } from "lucide-react";
 
 export default function PatientDetail() {
   const { id } = useParams<{ id: string }>();
+  const { t, isRTL } = useLanguage();
+  const { patients } = useDataStore();
   
-  const patient = dataStore.patients.find(p => p.id === id);
-  const appointments = dataStore.appointments.filter(a => a.patientId === id).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  const treatments = dataStore.treatments.filter(t => t.patientId === id).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  const invoices = dataStore.invoices.filter(i => i.patientId === id).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const patient = patients.find(p => p.id === id);
 
   if (!patient) {
     return (
       <Layout>
-        <div className="flex flex-col items-center justify-center h-[60vh] space-y-4">
-          <h2 className="text-2xl font-bold">Patient Not Found</h2>
-          <p className="text-muted-foreground">The patient ID {id} does not exist in our records.</p>
-          <Link href="/patients">
-            <Button variant="outline"><ChevronLeft className="mr-2 h-4 w-4" /> Back to Patients</Button>
-          </Link>
-        </div>
+        <div className="p-8 text-center text-muted-foreground">Patient not found.</div>
       </Layout>
     );
   }
 
   return (
     <Layout>
-      <div className="space-y-6 max-w-7xl mx-auto">
-        <div>
-          <Link href="/patients">
-            <span className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1 cursor-pointer mb-4 inline-flex w-fit">
-              <ChevronLeft className="h-4 w-4" /> Back to patients
-            </span>
-          </Link>
-          <div className="flex justify-between items-start">
-            <div className="flex gap-4 items-center">
-              <div className="h-16 w-16 bg-primary/10 rounded-full flex items-center justify-center text-primary text-2xl font-bold">
-                {patient.name.split(' ').map(n => n[0]).join('')}
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold tracking-tight">{patient.name}</h1>
-                <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
-                  <span className="flex items-center gap-1"><Badge variant="outline">{patient.id}</Badge></span>
-                  <span>{patient.gender}, {new Date().getFullYear() - new Date(patient.dateOfBirth).getFullYear()} yrs</span>
-                  <Badge variant={patient.status === 'active' ? 'default' : 'secondary'}>{patient.status}</Badge>
-                </div>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline">Edit Patient</Button>
-              <Button>New Appointment</Button>
+      <div className="max-w-6xl mx-auto space-y-6">
+        <Link href="/patients">
+          <Button variant="ghost" className="pl-0 hover:bg-transparent -ml-2 text-muted-foreground">
+            <ArrowLeft className={`h-4 w-4 ${isRTL ? 'ml-2 rotate-180' : 'mr-2'}`} />
+            Back to Patients
+          </Button>
+        </Link>
+        
+        <header className="bg-card border rounded-xl p-6 flex flex-col md:flex-row gap-6 items-start md:items-center">
+          <div className="h-20 w-20 bg-primary/10 rounded-full flex items-center justify-center text-primary text-2xl font-bold shrink-0">
+            {patient.fullName.substring(0, 2).toUpperCase()}
+          </div>
+          <div className="flex-1 space-y-2">
+            <h1 className="text-2xl font-bold">{patient.fullName}</h1>
+            <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground">
+              <p>ID: {patient.nationalId || '--'}</p>
+              <p>{patient.phone}</p>
+              <p>{patient.email}</p>
+              <p>DOB: {patient.dob}</p>
             </div>
           </div>
-        </div>
-
-        <div className="grid gap-6 md:grid-cols-3">
-          <Card className="md:col-span-1">
-            <CardHeader>
-              <CardTitle>Profile Details</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-3 text-sm">
-                <div className="flex items-start gap-3">
-                  <Phone className="h-4 w-4 text-muted-foreground mt-0.5" />
-                  <div>
-                    <p className="font-medium">Phone</p>
-                    <p className="text-muted-foreground">{patient.phone}</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <Mail className="h-4 w-4 text-muted-foreground mt-0.5" />
-                  <div>
-                    <p className="font-medium">Email</p>
-                    <p className="text-muted-foreground">{patient.email}</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
-                  <div>
-                    <p className="font-medium">Address</p>
-                    <p className="text-muted-foreground">{patient.address}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="border-t pt-4 mt-4 space-y-3 text-sm">
-                <h4 className="font-semibold mb-2">Medical Overview</h4>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Blood Type</span>
-                  <span className="font-medium">{patient.bloodType}</span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground flex items-center gap-1 mb-1">
-                    <AlertTriangle className="h-3 w-3" /> Allergies
-                  </span>
-                  {patient.allergies.length > 0 ? (
-                    <div className="flex flex-wrap gap-1">
-                      {patient.allergies.map(a => (
-                        <Badge key={a} variant="destructive" className="bg-destructive/10 text-destructive border-transparent hover:bg-destructive/20">{a}</Badge>
-                      ))}
-                    </div>
-                  ) : (
-                    <span className="font-medium">None known</span>
-                  )}
-                </div>
-              </div>
-
-              <div className="border-t pt-4 mt-4 space-y-3 text-sm">
-                <h4 className="font-semibold mb-2">Insurance</h4>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Provider</span>
-                  <span className="font-medium">{patient.insuranceProvider}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Number</span>
-                  <span className="font-medium font-mono">{patient.insuranceNumber}</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <div className="md:col-span-2">
-            <Tabs defaultValue="appointments" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="appointments">Appointments</TabsTrigger>
-                <TabsTrigger value="treatments">Treatments</TabsTrigger>
-                <TabsTrigger value="billing">Billing</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="appointments" className="mt-4 space-y-4">
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <Calendar className="h-5 w-5 text-primary" /> Appointment History
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {appointments.length === 0 ? (
-                      <p className="text-muted-foreground text-sm text-center py-4">No appointments found.</p>
-                    ) : (
-                      <div className="space-y-4">
-                        {appointments.map(apt => (
-                          <div key={apt.id} className="flex justify-between items-center p-3 rounded-lg border bg-card hover:bg-accent/5 transition-colors">
-                            <div className="flex items-center gap-4">
-                              <div className="bg-muted p-2 rounded text-center min-w-14">
-                                <div className="text-xs font-semibold uppercase">{new Date(apt.date).toLocaleDateString('en-US', { month: 'short' })}</div>
-                                <div className="text-lg font-bold leading-tight">{new Date(apt.date).getDate()}</div>
-                              </div>
-                              <div>
-                                <p className="font-medium">{apt.type.charAt(0).toUpperCase() + apt.type.slice(1)}</p>
-                                <p className="text-xs text-muted-foreground">{apt.time} ({apt.duration}m) with {apt.dentistName}</p>
-                              </div>
-                            </div>
-                            <Badge variant={
-                              apt.status === 'completed' ? 'secondary' : 
-                              apt.status === 'scheduled' ? 'default' : 
-                              'destructive'
-                            }>{apt.status}</Badge>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="treatments" className="mt-4 space-y-4">
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <Activity className="h-5 w-5 text-primary" /> Treatment Records
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {treatments.length === 0 ? (
-                      <p className="text-muted-foreground text-sm text-center py-4">No treatments found.</p>
-                    ) : (
-                      <div className="space-y-4">
-                        {treatments.map(t => (
-                          <div key={t.id} className="border-b last:border-0 pb-4 last:pb-0">
-                            <div className="flex justify-between items-start mb-1">
-                              <h4 className="font-medium text-primary">{t.procedure}</h4>
-                              <span className="text-sm font-medium">${t.cost}</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
-                              <span>{t.date}</span>
-                              <span>•</span>
-                              <span>{t.dentistName}</span>
-                              {t.toothNumber && (
-                                <>
-                                  <span>•</span>
-                                  <span>Tooth #{t.toothNumber}</span>
-                                </>
-                              )}
-                            </div>
-                            <p className="text-sm">{t.description}</p>
-                            <div className="mt-2">
-                              <Badge variant={t.status === 'completed' ? 'secondary' : 'outline'} className="text-xs">
-                                {t.status}
-                              </Badge>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="billing" className="mt-4 space-y-4">
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <FileText className="h-5 w-5 text-primary" /> Invoices
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {invoices.length === 0 ? (
-                      <p className="text-muted-foreground text-sm text-center py-4">No invoices found.</p>
-                    ) : (
-                      <div className="space-y-4">
-                        {invoices.map(inv => (
-                          <div key={inv.id} className="flex justify-between items-center p-3 rounded-lg border bg-card">
-                            <div>
-                              <p className="font-medium">{inv.id}</p>
-                              <p className="text-xs text-muted-foreground">Issued: {inv.date} • Due: {inv.dueDate}</p>
-                            </div>
-                            <div className="text-right">
-                              <p className="font-bold">${inv.total}</p>
-                              <Badge variant={
-                                inv.status === 'paid' ? 'secondary' : 
-                                inv.status === 'pending' ? 'outline' : 
-                                'destructive'
-                              } className="mt-1">
-                                {inv.status}
-                              </Badge>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
+          <div className="flex flex-col gap-2 shrink-0">
+            {patient.bloodType && (
+              <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium text-center border border-red-200">
+                Blood: {patient.bloodType}
+              </span>
+            )}
+            {patient.allergies && (
+              <span className="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-medium text-center border border-amber-200">
+                Allergy: {patient.allergies}
+              </span>
+            )}
           </div>
-        </div>
+        </header>
+
+        <Tabs defaultValue="overview" className="w-full">
+          <TabsList className="w-full justify-start h-auto p-1 bg-muted/50 rounded-lg overflow-x-auto flex-wrap">
+            <TabsTrigger value="overview" className="min-h-[44px] px-6">{t("patient.overview")}</TabsTrigger>
+            <TabsTrigger value="cases" className="min-h-[44px] px-6">{t("patient.clinical_cases")}</TabsTrigger>
+            <TabsTrigger value="odontogram" className="min-h-[44px] px-6">{t("patient.odontogram")}</TabsTrigger>
+            <TabsTrigger value="radiology" className="min-h-[44px] px-6">{t("patient.radiology")}</TabsTrigger>
+            <TabsTrigger value="photos" className="min-h-[44px] px-6">{t("patient.photos")}</TabsTrigger>
+            <TabsTrigger value="billing" className="min-h-[44px] px-6">{t("patient.billing")}</TabsTrigger>
+          </TabsList>
+
+          <div className="mt-6">
+            <TabsContent value="overview" className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-card border rounded-xl p-6">
+                  <h3 className="font-semibold mb-4 text-lg">Demographics</h3>
+                  <dl className="space-y-3 text-sm">
+                    <div className="flex justify-between border-b pb-2"><dt className="text-muted-foreground">Gender</dt><dd className="font-medium">{patient.gender}</dd></div>
+                    <div className="flex justify-between border-b pb-2"><dt className="text-muted-foreground">Status</dt><dd className="font-medium">{patient.status}</dd></div>
+                    <div className="flex justify-between border-b pb-2"><dt className="text-muted-foreground">Last Visit</dt><dd className="font-medium">{patient.lastVisit}</dd></div>
+                    <div className="flex justify-between border-b pb-2"><dt className="text-muted-foreground">Insurance</dt><dd className="font-medium">{patient.insuranceProvider || '--'}</dd></div>
+                  </dl>
+                </div>
+                <div className="bg-card border rounded-xl p-6">
+                  <h3 className="font-semibold mb-4 text-lg">Clinical Notes</h3>
+                  <p className="text-sm whitespace-pre-wrap">{patient.notes || 'No notes available.'}</p>
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="cases">
+              <EmptyState icon={ClipboardList} title={t("cases.empty")} description={t("cases.empty_subtext")} actionLabel={t("action.new_case")} />
+            </TabsContent>
+            <TabsContent value="odontogram">
+              <EmptyState icon={Smile} title="No Odontogram Records" description="Chart this patient's teeth." actionLabel="Go to Odontogram" onAction={() => window.location.href='/odontogram'} />
+            </TabsContent>
+            <TabsContent value="radiology">
+              <EmptyState icon={ScanLine} title={t("radiology.empty")} description={t("radiology.empty_subtext")} actionLabel="Add Radiograph" />
+            </TabsContent>
+            <TabsContent value="photos">
+              <EmptyState icon={Camera} title={t("photos.empty")} description={t("photos.empty_subtext")} actionLabel="Add Photo" />
+            </TabsContent>
+            <TabsContent value="billing">
+              <EmptyState icon={CreditCard} title="No Billing Records" description="Manage invoices and payments." actionLabel="Create Invoice" />
+            </TabsContent>
+          </div>
+        </Tabs>
       </div>
     </Layout>
   );
