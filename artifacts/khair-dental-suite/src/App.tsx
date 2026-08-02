@@ -4,13 +4,20 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { ThemeProvider } from 'next-themes';
 import { Route, Switch, Router as WouterRouter } from 'wouter';
 
+import { LanguageProvider } from '@/i18n';
+import { DataStoreProvider } from '@/store/DataStore';
+
 import Dashboard from '@/pages/Dashboard';
 import Patients from '@/pages/Patients';
 import PatientDetail from '@/pages/PatientDetail';
-import Appointments from '@/pages/Appointments';
-import Treatments from '@/pages/Treatments';
-import Billing from '@/pages/Billing';
-import Staff from '@/pages/Staff';
+import ClinicalCases from '@/pages/ClinicalCases';
+import Odontogram from '@/pages/Odontogram';
+import Endodontics from '@/pages/Endodontics';
+import Implantology from '@/pages/Implantology';
+import Prosthodontics from '@/pages/Prosthodontics';
+import Radiology from '@/pages/Radiology';
+import Photos from '@/pages/Photos';
+import Reports from '@/pages/Reports';
 import Settings from '@/pages/Settings';
 import NotFound from '@/pages/not-found';
 
@@ -22,10 +29,14 @@ function Router() {
       <Route path="/" component={Dashboard} />
       <Route path="/patients" component={Patients} />
       <Route path="/patients/:id" component={PatientDetail} />
-      <Route path="/appointments" component={Appointments} />
-      <Route path="/treatments" component={Treatments} />
-      <Route path="/billing" component={Billing} />
-      <Route path="/staff" component={Staff} />
+      <Route path="/clinical-cases" component={ClinicalCases} />
+      <Route path="/odontogram" component={Odontogram} />
+      <Route path="/endodontics" component={Endodontics} />
+      <Route path="/implantology" component={Implantology} />
+      <Route path="/prosthodontics" component={Prosthodontics} />
+      <Route path="/radiology" component={Radiology} />
+      <Route path="/photos" component={Photos} />
+      <Route path="/reports" component={Reports} />
       <Route path="/settings" component={Settings} />
       <Route component={NotFound} />
     </Switch>
@@ -34,16 +45,20 @@ function Router() {
 
 function App() {
   return (
-    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
-            <Router />
-          </WouterRouter>
-          <Toaster />
-        </TooltipProvider>
-      </QueryClientProvider>
-    </ThemeProvider>
+    <LanguageProvider>
+      <DataStoreProvider>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+          <QueryClientProvider client={queryClient}>
+            <TooltipProvider>
+              <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
+                <Router />
+              </WouterRouter>
+              <Toaster />
+            </TooltipProvider>
+          </QueryClientProvider>
+        </ThemeProvider>
+      </DataStoreProvider>
+    </LanguageProvider>
   );
 }
 
