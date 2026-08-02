@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Khair Dental Suite"
+description = "A modern dental practice management web application for Khair Dental Suite. Frontend-only React + TypeScript app built with Vite, featuring a clean, professional UI for a dental clinic."
+version = "1.0.0"
+id = "artifacts/khair-dental-suite"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 19165
+
+[services.development]
+run = "pnpm --filter @workspace/khair-dental-suite run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/khair-dental-suite", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/khair-dental-suite/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "19165"
+BASE_PATH = "/"
