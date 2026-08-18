@@ -29,6 +29,8 @@ import {
   VisitProcedure,
   VisitAttachment,
   VisitRadiograph,
+  Payment,
+  PaymentAllocation,
 } from '../types';
 
 interface DataStoreContextType {
@@ -63,6 +65,12 @@ interface DataStoreContextType {
   addFinancialRecord: (r: Omit<FinancialRecord, 'id'>) => void;
   updateFinancialRecord: (id: string, r: Partial<FinancialRecord>) => void;
   deleteFinancialRecord: (id: string) => void;
+  payments: Payment[];
+  addPayment: (p: Omit<Payment, 'id'>) => string;
+  updatePayment: (id: string, updates: Partial<Payment>) => void;
+  deletePayment: (id: string) => void;
+  paymentAllocations: PaymentAllocation[];
+  addPaymentAllocation: (a: Omit<PaymentAllocation, 'id'>) => string;
 
   // ── Documents ─────────────────────────────────────────────
   patientDocuments: PatientDocument[];
@@ -159,6 +167,8 @@ export function DataStoreProvider({ children }: { children: React.ReactNode }) {
   const [visitRadiographs, setVisitRadiographs] = useState<VisitRadiograph[]>([]);
   const [treatmentPlanItems, setTreatmentPlanItems] = useState<TreatmentPlanItem[]>([]);
   const [financialRecords, setFinancialRecords] = useState<FinancialRecord[]>([]);
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [paymentAllocations, setPaymentAllocations] = useState<PaymentAllocation[]>([]);
   const [patientDocuments, setPatientDocuments] = useState<PatientDocument[]>([]);
 
   // ── Clinical ────────────────────────────────────────────
@@ -233,6 +243,12 @@ export function DataStoreProvider({ children }: { children: React.ReactNode }) {
         addFinancialRecord: (r) => setFinancialRecords(prev => [...prev, { ...r, id: generateId() }]),
         updateFinancialRecord: (id, updates) => setFinancialRecords(prev => prev.map(r => r.id === id ? { ...r, ...updates } : r)),
         deleteFinancialRecord: (id) => setFinancialRecords(prev => prev.filter(r => r.id !== id)),
+        payments,
+        addPayment: (p) => { const id = generateId(); setPayments(prev => [...prev, { ...p, id }]); return id; },
+        updatePayment: (id, updates) => setPayments(prev => prev.map(p => p.id === id ? { ...p, ...updates, updatedAt: now() } : p)),
+        deletePayment: (id) => setPayments(prev => prev.map(p => p.id === id ? { ...p, deletedAt: now(), updatedAt: now() } : p)),
+        paymentAllocations,
+        addPaymentAllocation: (a) => { const id = generateId(); setPaymentAllocations(prev => [...prev, { ...a, id }]); return id; },
 
         // Documents
         patientDocuments,
