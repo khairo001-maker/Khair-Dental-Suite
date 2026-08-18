@@ -10,6 +10,7 @@ import { DataStoreProvider } from '@/store/DataStore';
 import Dashboard from '@/pages/Dashboard';
 import Patients from '@/pages/Patients';
 import PatientDetail from '@/pages/PatientDetail';
+import Visits from '@/pages/Visits';
 import ClinicalCases from '@/pages/ClinicalCases';
 import Odontogram from '@/pages/Odontogram';
 import Endodontics from '@/pages/Endodontics';
@@ -29,6 +30,7 @@ function Router() {
       <Route path="/" component={Dashboard} />
       <Route path="/patients" component={Patients} />
       <Route path="/patients/:id" component={PatientDetail} />
+      <Route path="/visits" component={Visits} />
       <Route path="/clinical-cases" component={ClinicalCases} />
       <Route path="/odontogram" component={Odontogram} />
       <Route path="/endodontics" component={Endodontics} />
