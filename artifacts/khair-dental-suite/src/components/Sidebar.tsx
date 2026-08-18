@@ -3,6 +3,7 @@ import {
   LayoutDashboard, 
   Users, 
   ClipboardList, 
+  Calendar,
   Smile, 
   Zap, 
   Layers, 
@@ -24,6 +25,7 @@ export function Sidebar() {
   const navItems = [
     { href: "/", label: t("nav.dashboard"), icon: LayoutDashboard },
     { href: "/patients", label: t("nav.patients"), icon: Users },
+     { href: "/visits", label: t("nav.visits"), icon: Calendar },
     { href: "/clinical-cases", label: t("nav.clinical_cases"), icon: ClipboardList },
     { href: "/odontogram", label: t("nav.odontogram"), icon: Smile },
     { href: "/endodontics", label: t("nav.endodontics"), icon: Zap },
