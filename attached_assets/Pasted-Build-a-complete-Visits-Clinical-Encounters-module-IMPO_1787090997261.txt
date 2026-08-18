@@ -1,0 +1,204 @@
+Build a complete Visits / Clinical Encounters module.
+
+IMPORTANT:
+- Preserve all existing functionality.
+- Do not rebuild or remove the existing Odontogram or Tooth Clinical Record.
+- Do not add a backend.
+- Keep the application offline-first.
+- Do not use fake patient data.
+
+The Visit/Encounter must become the central clinical event connecting the patient, teeth, diagnoses, procedures, photos, radiographs, treatment plan and financial records.
+
+Requirements:
+
+1. Visit List
+Create a chronological list of all visits for the selected patient.
+
+Each visit should display:
+- Date
+- Visit type
+- Main complaint
+- Diagnoses
+- Procedures performed
+- Teeth treated
+- Payment status
+- Visit status
+
+2. Create New Visit
+
+Allow the clinician to create a visit with:
+
+- Date
+- Start time
+- End time
+- Visit type
+- Chief Complaint
+- History of Present Illness
+- Clinical Examination
+- Diagnosis
+- Treatment performed
+- Treatment notes
+- Follow-up instructions
+- General notes
+
+3. Visit Types
+
+Support:
+- Examination
+- Emergency
+- Consultation
+- Restoration
+- Endodontics
+- Prosthodontics
+- Implantology
+- Periodontal
+- Oral Surgery
+- Esthetic Dentistry
+- Follow-up
+- Other
+
+4. Teeth Treated
+
+Allow the clinician to select one or multiple FDI teeth from the existing odontogram.
+
+The selected teeth must be linked to the visit using IDs.
+
+Do not duplicate tooth records.
+
+5. Procedures
+
+Allow multiple procedures within the same visit.
+
+Each procedure must contain:
+- Procedure ID
+- Tooth ID(s)
+- Procedure type
+- Date
+- Status
+- Notes
+- Clinician
+
+Support:
+- Examination
+- Diagnosis
+- Restoration
+- Root Canal Treatment
+- Post and Core
+- Crown
+- Implant
+- Extraction
+- Periodontal treatment
+- Other
+
+6. Diagnosis
+
+Allow multiple diagnoses within one visit.
+
+Each diagnosis must contain:
+- Diagnosis
+- Tooth ID (optional)
+- Notes
+- Date
+
+7. Photos
+
+Allow photos to be linked to the visit.
+
+Do not implement camera or device import yet.
+
+Prepare the data model for:
+- Photo ID
+- Patient ID
+- Visit ID
+- Tooth ID (optional)
+- Category
+- Caption
+- Date
+- File reference
+
+8. Radiographs
+
+Allow radiographs to be linked to the visit.
+
+Support:
+- Periapical
+- Bitewing
+- OPG
+- Other
+
+Prepare the data model for future DICOM/CBCT support.
+
+9. Treatment Plan Integration
+
+A visit must be able to reference existing Treatment Plan items.
+
+When a planned procedure is completed during a visit:
+- Update its status appropriately.
+- Do not create a duplicate Treatment Plan item.
+- Preserve the treatment history.
+
+10. Financial Integration
+
+A visit may have one or more payments associated with it.
+
+IMPORTANT:
+Do not duplicate financial records.
+
+The Financial module must remain the single source of truth for:
+- Total treatment cost
+- Payments
+- Remaining balance
+
+The visit should only reference financial transaction IDs.
+
+11. Visit Timeline
+
+Create a clear clinical timeline showing:
+- Diagnoses
+- Procedures
+- Photos
+- Radiographs
+- Notes
+- Payments
+
+ordered chronologically.
+
+12. Editing
+
+Allow an existing visit to be opened and edited.
+
+Maintain:
+- createdAt
+- updatedAt
+- deletedAt
+
+Use soft deletion rather than permanently deleting clinical records.
+
+13. Data Architecture
+
+Create clean TypeScript types/interfaces for:
+- Visit
+- VisitDiagnosis
+- VisitProcedure
+- VisitAttachment
+- VisitRadiograph
+
+Use IDs and relationships rather than duplicating data.
+
+Prepare everything for future IndexedDB/Dexie integration.
+
+14. UX
+
+Optimize for iPad and Android tablets:
+- Large touch targets
+- Responsive layout
+- Clear navigation
+- Easy one-handed interaction
+- Arabic and English labels
+- Clean clinical interface
+
+Use the existing application's design system.
+
+Do not introduce a backend.
+Do not use mock data.
+Do not break existing features.
