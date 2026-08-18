@@ -141,7 +141,67 @@ export interface TreatmentPlanItem {
 
 // ── Financial ─────────────────────────────────────────────────
 export type PaymentStatus = 'Pending' | 'Partial' | 'Paid' | 'Overdue' | 'Waived';
-export type PaymentMethod = 'Cash' | 'Card' | 'Insurance' | 'Bank Transfer' | 'Other';
+export type PaymentMethod = 'Cash' | 'Card' | 'Bank Transfer' | 'Electronic Wallet' | 'Insurance' | 'Other';
+export type Currency = 'EUR' | 'USD' | 'TRY' | 'SYP';
+
+export interface FinancialAccount {
+  id: string;
+  patientId: string;
+  currency: Currency;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TreatmentCost {
+  id: string;
+  patientId: string;
+  treatmentPlanItemId: string;
+  toothNumbers: number[];
+  procedure: string;
+  description: string;
+  estimatedCost: number;
+  finalCost?: number;
+  currency: Currency;
+  status: TreatmentItemStatus;
+  date: string;
+}
+
+export interface Payment {
+  id: string;
+  patientId: string;
+  date: string;
+  amount: number;
+  currency: Currency;
+  paymentMethod: PaymentMethod;
+  visitId?: string;
+  treatmentPlanItemId?: string;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string;
+}
+
+export interface PaymentAllocation {
+  id: string;
+  paymentId: string;
+  treatmentPlanItemId?: string;
+  visitId?: string;
+  amount: number;
+  currency: Currency;
+}
+
+export interface FinancialTransaction {
+  id: string;
+  patientId: string;
+  date: string;
+  type: 'Treatment' | 'Payment';
+  treatmentPlanItemId?: string;
+  paymentId?: string;
+  amount: number;
+  currency: Currency;
+  balanceAfter: number;
+  notes: string;
+}
 
 export interface FinancialRecord {
   id: string;
