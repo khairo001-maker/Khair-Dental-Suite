@@ -12,6 +12,7 @@ import {
   Camera, 
   BarChart3, 
   Settings,
+  DollarSign,
   Globe
 } from "lucide-react";
 import { useLanguage } from "@/i18n";
@@ -34,6 +35,7 @@ export function Sidebar() {
     { href: "/radiology", label: t("nav.radiology"), icon: ScanLine },
     { href: "/photos", label: t("nav.photos"), icon: Camera },
     { href: "/reports", label: t("nav.reports"), icon: BarChart3 },
+     { href: "/financial", label: t("nav.financial_dashboard"), icon: DollarSign },
     { href: "/settings", label: t("nav.settings"), icon: Settings },
   ];
 

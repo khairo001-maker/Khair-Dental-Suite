@@ -20,6 +20,7 @@ import Radiology from '@/pages/Radiology';
 import Photos from '@/pages/Photos';
 import Reports from '@/pages/Reports';
 import Settings from '@/pages/Settings';
+import FinancialDashboard from '@/pages/FinancialDashboard';
 import NotFound from '@/pages/not-found';
 
 const queryClient = new QueryClient();
@@ -40,6 +41,7 @@ function Router() {
       <Route path="/photos" component={Photos} />
       <Route path="/reports" component={Reports} />
       <Route path="/settings" component={Settings} />
+      <Route path="/financial" component={FinancialDashboard} />
       <Route component={NotFound} />
     </Switch>
   );
