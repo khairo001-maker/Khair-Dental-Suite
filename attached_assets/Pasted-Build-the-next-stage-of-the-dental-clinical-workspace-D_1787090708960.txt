@@ -1,0 +1,104 @@
+Build the next stage of the dental clinical workspace.
+
+Do NOT rebuild or remove the existing odontogram.
+Preserve the current FDI permanent-teeth odontogram and its existing functionality.
+
+Create a detailed Tooth Clinical Record that opens when the user selects a tooth.
+
+Requirements:
+
+1. Tooth Header
+- FDI tooth number
+- Tooth name
+- Current status
+- Quick actions
+
+2. Diagnosis
+Allow multiple diagnoses for the same tooth.
+Each diagnosis must contain:
+- Diagnosis name
+- Date
+- Notes
+- Status
+
+3. Treatment History
+Create a chronological history of all treatments performed on the tooth.
+Each treatment must contain:
+- Treatment type
+- Date
+- Visit ID
+- Notes
+- Status
+- Clinician
+
+Support:
+- Restoration
+- Root Canal Treatment
+- Crown
+- Post and Core
+- Implant
+- Extraction
+- Periodontal treatment
+- Other
+
+4. Treatment Plan
+Allow planned treatments to be linked to the selected tooth.
+
+Each planned treatment must contain:
+- Procedure
+- Priority
+- Status: Planned / In Progress / Completed / Cancelled
+- Estimated cost
+- Notes
+
+5. Clinical Photos
+Allow photos to be associated with the selected tooth.
+Each photo must have:
+- Date
+- Visit ID
+- Category
+- Caption
+
+Do not implement camera functionality yet.
+Prepare the data structure for future camera and device photo import.
+
+6. Radiographs
+Allow radiographs to be associated with the selected tooth.
+Support:
+- Periapical
+- Bitewing
+- OPG
+- Other
+
+Do not implement a DICOM viewer yet.
+Prepare the structure for future DICOM/CBCT integration.
+
+7. Periodontal Notes
+Add periodontal findings and notes related to the selected tooth.
+
+8. Tooth Timeline
+Display all diagnoses, treatments, photos and radiographs chronologically.
+
+9. Financial Integration
+Allow a treatment associated with the tooth to reference a Treatment Plan item.
+Do not duplicate financial records.
+The financial module will be the source of truth for payments.
+
+10. Data Architecture
+Create clean TypeScript interfaces/types for the tooth clinical record.
+Use IDs and relationships rather than duplicating data.
+Prepare the structure for IndexedDB/Dexie integration.
+
+11. UX
+Optimize the entire interface for iPad touch interaction.
+Use large touch targets.
+Use a clean clinical design.
+Use modal or side-panel navigation where appropriate.
+Support Arabic and English labels.
+Do not use fake patient data.
+
+IMPORTANT:
+Do not break existing functionality.
+Do not remove existing pages.
+Do not introduce a backend.
+Keep the application offline-first.
