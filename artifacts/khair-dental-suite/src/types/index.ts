@@ -26,18 +26,98 @@ export interface DentalHistory {
 }
 
 // ── Visit (Timeline) ─────────────────────────────────────────
+export type VisitType =
+  | 'Examination' | 'Emergency' | 'Consultation' | 'Restoration'
+  | 'Endodontics' | 'Prosthodontics' | 'Implantology' | 'Periodontal'
+  | 'Oral Surgery' | 'Esthetic Dentistry' | 'Follow-up' | 'Other';
+export type VisitStatus = 'Draft' | 'Open' | 'Completed' | 'Cancelled';
+
 export interface Visit {
   id: string;
   patientId: string;
   date: string;                  // ISO date
-  time: string;                  // e.g. "09:30"
+  time: string;                  // legacy start time
+  startTime: string;
+  endTime: string;
   dentist: string;
-  type: 'Checkup' | 'Emergency' | 'Follow-up' | 'Procedure' | 'Consultation';
+  type: VisitType;
   chiefComplaint: string;
+  historyPresentIllness: string;
   clinicalFindings: string;
+  diagnosis: string;
   treatmentDone: string;
+  treatmentNotes: string;
+  followUpInstructions: string;
+  generalNotes: string;
   nextVisitDate: string;
   nextVisitNotes: string;
+  toothNumbers: number[];
+  diagnosisIds: string[];
+  procedureIds: string[];
+  attachmentIds: string[];
+  radiographIds: string[];
+  treatmentPlanItemIds: string[];
+  financialRecordIds: string[];
+  status: VisitStatus;
+  paymentStatus: PaymentStatus;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string;
+}
+
+export type VisitProcedureType =
+  | 'Examination' | 'Diagnosis' | 'Restoration' | 'Root Canal Treatment'
+  | 'Post and Core' | 'Crown' | 'Implant' | 'Extraction'
+  | 'Periodontal Treatment' | 'Other';
+export type VisitProcedureStatus = 'Planned' | 'In Progress' | 'Completed' | 'Cancelled';
+
+export interface VisitDiagnosis {
+  id: string;
+  patientId: string;
+  visitId: string;
+  toothNumber?: number;
+  diagnosis: string;
+  notes: string;
+  date: string;
+  status: 'Active' | 'Resolved' | 'Monitoring';
+}
+
+export interface VisitProcedure {
+  id: string;
+  patientId: string;
+  visitId: string;
+  toothNumbers: number[];
+  type: VisitProcedureType;
+  date: string;
+  status: VisitProcedureStatus;
+  notes: string;
+  clinician: string;
+  treatmentPlanItemId?: string;
+}
+
+export type VisitAttachmentCategory = 'Before' | 'After' | 'Intraoral' | 'Extraoral' | 'Other';
+
+export interface VisitAttachment {
+  id: string;
+  patientId: string;
+  visitId: string;
+  toothNumber?: number;
+  category: VisitAttachmentCategory;
+  caption: string;
+  date: string;
+  fileReference?: string;
+}
+
+export interface VisitRadiograph {
+  id: string;
+  patientId: string;
+  visitId: string;
+  toothNumber?: number;
+  type: 'Periapical' | 'Bitewing' | 'OPG' | 'Other';
+  date: string;
+  findings: string;
+  interpretation: string;
+  fileReference?: string;
 }
 
 // ── Treatment Plan ────────────────────────────────────────────

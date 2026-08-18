@@ -25,6 +25,10 @@ import {
   PeriodontalEntry,
   ToothPhoto,
   ToothRadiograph,
+  VisitDiagnosis,
+  VisitProcedure,
+  VisitAttachment,
+  VisitRadiograph,
 } from '../types';
 
 interface DataStoreContextType {
@@ -36,9 +40,17 @@ interface DataStoreContextType {
 
   // ── Visits ────────────────────────────────────────────────
   visits: Visit[];
-  addVisit: (v: Omit<Visit, 'id'>) => void;
+  addVisit: (v: Omit<Visit, 'id'>) => string;
   updateVisit: (id: string, v: Partial<Visit>) => void;
   deleteVisit: (id: string) => void;
+  visitDiagnoses: VisitDiagnosis[];
+  addVisitDiagnosis: (d: Omit<VisitDiagnosis, 'id'>) => string;
+  visitProcedures: VisitProcedure[];
+  addVisitProcedure: (p: Omit<VisitProcedure, 'id'>) => string;
+  visitAttachments: VisitAttachment[];
+  addVisitAttachment: (a: Omit<VisitAttachment, 'id'>) => string;
+  visitRadiographs: VisitRadiograph[];
+  addVisitRadiograph: (r: Omit<VisitRadiograph, 'id'>) => string;
 
   // ── Treatment Plan ─────────────────────────────────────────
   treatmentPlanItems: TreatmentPlanItem[];
@@ -141,6 +153,10 @@ export function DataStoreProvider({ children }: { children: React.ReactNode }) {
   // ── Core patient state ──────────────────────────────────
   const [patients, setPatients] = useState<Patient[]>([]);
   const [visits, setVisits] = useState<Visit[]>([]);
+  const [visitDiagnoses, setVisitDiagnoses] = useState<VisitDiagnosis[]>([]);
+  const [visitProcedures, setVisitProcedures] = useState<VisitProcedure[]>([]);
+  const [visitAttachments, setVisitAttachments] = useState<VisitAttachment[]>([]);
+  const [visitRadiographs, setVisitRadiographs] = useState<VisitRadiograph[]>([]);
   const [treatmentPlanItems, setTreatmentPlanItems] = useState<TreatmentPlanItem[]>([]);
   const [financialRecords, setFinancialRecords] = useState<FinancialRecord[]>([]);
   const [patientDocuments, setPatientDocuments] = useState<PatientDocument[]>([]);
@@ -194,9 +210,17 @@ export function DataStoreProvider({ children }: { children: React.ReactNode }) {
 
         // Visits
         visits,
-        addVisit: (v) => setVisits(prev => [...prev, { ...v, id: generateId() }]),
+        addVisit: (v) => { const id = generateId(); setVisits(prev => [...prev, { ...v, id }]); return id; },
         updateVisit: (id, updates) => setVisits(prev => prev.map(v => v.id === id ? { ...v, ...updates } : v)),
-        deleteVisit: (id) => setVisits(prev => prev.filter(v => v.id !== id)),
+        deleteVisit: (id) => setVisits(prev => prev.map(v => v.id === id ? { ...v, deletedAt: now(), status: 'Cancelled', updatedAt: now() } : v)),
+        visitDiagnoses,
+        addVisitDiagnosis: (d) => { const id = generateId(); setVisitDiagnoses(prev => [...prev, { ...d, id }]); return id; },
+        visitProcedures,
+        addVisitProcedure: (p) => { const id = generateId(); setVisitProcedures(prev => [...prev, { ...p, id }]); return id; },
+        visitAttachments,
+        addVisitAttachment: (a) => { const id = generateId(); setVisitAttachments(prev => [...prev, { ...a, id }]); return id; },
+        visitRadiographs,
+        addVisitRadiograph: (r) => { const id = generateId(); setVisitRadiographs(prev => [...prev, { ...r, id }]); return id; },
 
         // Treatment Plan
         treatmentPlanItems,
