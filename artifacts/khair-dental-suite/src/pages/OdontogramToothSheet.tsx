@@ -192,13 +192,13 @@ function DiagnosisTab({ toothNumber, patientId }: { toothNumber: number; patient
 
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<Omit<ToothDiagnosis, 'id' | 'toothNumber' | 'patientId'>>({
-    date: today(), diagnosis: '', severity: 'Mild', notes: '', dentist: '',
+    date: today(), diagnosis: '', severity: 'Mild', status: 'Active', notes: '', dentist: '',
   });
 
   const save = () => {
     if (!form.diagnosis.trim()) return;
     addToothDiagnosis({ ...form, toothNumber, patientId });
-    setForm({ date: today(), diagnosis: '', severity: 'Mild', notes: '', dentist: '' });
+    setForm({ date: today(), diagnosis: '', severity: 'Mild', status: 'Active', notes: '', dentist: '' });
     setOpen(false);
   };
 
@@ -214,6 +214,7 @@ function DiagnosisTab({ toothNumber, patientId }: { toothNumber: number; patient
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-medium">{r.diagnosis}</span>
                     <Badge variant="outline" className="text-xs">{r.severity}</Badge>
+                    <Badge variant={r.status === 'Active' ? 'destructive' : 'secondary'} className="text-xs">{r.status}</Badge>
                   </div>
                   {r.notes && <p className="text-muted-foreground text-xs">{r.notes}</p>}
                   <p className="text-xs text-muted-foreground/70">{r.date}{r.dentist ? ` · ${r.dentist}` : ''}</p>
@@ -234,6 +235,17 @@ function DiagnosisTab({ toothNumber, patientId }: { toothNumber: number; patient
                       <SelectItem value="Mild">Mild</SelectItem>
                       <SelectItem value="Moderate">Moderate</SelectItem>
                       <SelectItem value="Severe">Severe</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs">Status</Label>
+                  <Select value={form.status} onValueChange={v => setForm(f => ({ ...f, status: v as ToothDiagnosis['status'] }))}>
+                    <SelectTrigger className="min-h-[44px] mt-1"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Active">Active</SelectItem>
+                      <SelectItem value="Monitoring">Monitoring</SelectItem>
+                      <SelectItem value="Resolved">Resolved</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -260,12 +272,12 @@ function DiagnosisTab({ toothNumber, patientId }: { toothNumber: number; patient
 
 // ── Tab: Treatments ───────────────────────────────────────────────────────────
 function TreatmentsTab({ toothNumber, patientId }: { toothNumber: number; patientId: string }) {
-  const { toothTreatments, addToothTreatment, deleteToothTreatment } = useDataStore();
+  const { toothTreatments, addToothTreatment, deleteToothTreatment, treatmentPlanItems } = useDataStore();
   const records = toothTreatments.filter(r => r.patientId === patientId && r.toothNumber === toothNumber);
 
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<Omit<ToothTreatment, 'id' | 'toothNumber' | 'patientId'>>({
-    date: today(), procedure: '', surfaces: [], notes: '', dentist: '', status: 'Planned',
+    date: today(), procedure: '', treatmentType: 'Other', surfaces: [], visitId: '', treatmentPlanItemId: '', notes: '', dentist: '', status: 'Planned',
   });
 
   const toggleSurface = (s: ToothSurface) => {
@@ -278,7 +290,7 @@ function TreatmentsTab({ toothNumber, patientId }: { toothNumber: number; patien
   const save = () => {
     if (!form.procedure.trim()) return;
     addToothTreatment({ ...form, toothNumber, patientId });
-    setForm({ date: today(), procedure: '', surfaces: [], notes: '', dentist: '', status: 'Planned' });
+    setForm({ date: today(), procedure: '', treatmentType: 'Other', surfaces: [], visitId: '', treatmentPlanItemId: '', notes: '', dentist: '', status: 'Planned' });
     setOpen(false);
   };
 
@@ -299,10 +311,13 @@ function TreatmentsTab({ toothNumber, patientId }: { toothNumber: number; patien
                 <RecordRow key={r.id} onDelete={() => deleteToothTreatment(r.id)}>
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-medium">{r.procedure}</span>
+                    <Badge variant="outline" className="text-xs">{r.treatmentType}</Badge>
                     <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${statusColor[r.status] || ''}`}>{r.status}</span>
                   </div>
                   {r.surfaces.length > 0 && <p className="text-xs text-muted-foreground">Surfaces: {r.surfaces.join(', ')}</p>}
                   {r.notes && <p className="text-muted-foreground text-xs">{r.notes}</p>}
+                  {r.visitId && <p className="text-xs text-muted-foreground">Visit ID: {r.visitId}</p>}
+                  {r.treatmentPlanItemId && <p className="text-xs text-muted-foreground">Linked treatment plan item</p>}
                   <p className="text-xs text-muted-foreground/70">{r.date}{r.dentist ? ` · ${r.dentist}` : ''}</p>
                 </RecordRow>
               ))}
@@ -314,6 +329,15 @@ function TreatmentsTab({ toothNumber, patientId }: { toothNumber: number; patien
                   <Input value={form.procedure} onChange={e => setForm(f => ({ ...f, procedure: e.target.value }))} placeholder="e.g. Composite Restoration, Extraction" className="min-h-[44px] mt-1" />
                 </div>
                 <div>
+                  <Label className="text-xs">Treatment Type</Label>
+                  <Select value={form.treatmentType} onValueChange={v => setForm(f => ({ ...f, treatmentType: v as ToothTreatment['treatmentType'] }))}>
+                    <SelectTrigger className="min-h-[44px] mt-1"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {['Restoration', 'Root Canal Treatment', 'Crown', 'Post and Core', 'Implant', 'Extraction', 'Periodontal Treatment', 'Other'].map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
                   <Label className="text-xs">Status</Label>
                   <Select value={form.status} onValueChange={v => setForm(f => ({ ...f, status: v as ToothTreatment['status'] }))}>
                     <SelectTrigger className="min-h-[44px] mt-1"><SelectValue /></SelectTrigger>
@@ -321,6 +345,22 @@ function TreatmentsTab({ toothNumber, patientId }: { toothNumber: number; patien
                       <SelectItem value="Planned">Planned</SelectItem>
                       <SelectItem value="In Progress">In Progress</SelectItem>
                       <SelectItem value="Completed">Completed</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs">Visit ID</Label>
+                  <Input value={form.visitId} onChange={e => setForm(f => ({ ...f, visitId: e.target.value }))} placeholder="Optional" className="min-h-[44px] mt-1" />
+                </div>
+                <div className="col-span-2">
+                  <Label className="text-xs">Linked Treatment Plan Item</Label>
+                  <Select value={form.treatmentPlanItemId || "none"} onValueChange={v => setForm(f => ({ ...f, treatmentPlanItemId: v === "none" ? "" : v }))}>
+                    <SelectTrigger className="min-h-[44px] mt-1"><SelectValue placeholder="Optional — select a plan item" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Not linked</SelectItem>
+                      {treatmentPlanItems.filter(i => i.patientId === patientId && (i.toothNumber === String(toothNumber) || i.toothNumber === '')).map(i => (
+                        <SelectItem key={i.id} value={i.id}>{i.procedure} · {i.status}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -942,12 +982,12 @@ function PhotosTab({ toothNumber, patientId }: { toothNumber: number; patientId:
 
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<Omit<ToothPhoto, 'id' | 'toothNumber' | 'patientId'>>({
-    date: today(), category: 'Intraoral', notes: '',
+    date: today(), visitId: '', category: 'Intraoral', caption: '', notes: '',
   });
 
   const save = () => {
     addToothPhoto({ ...form, toothNumber, patientId });
-    setForm({ date: today(), category: 'Intraoral', notes: '' });
+    setForm({ date: today(), visitId: '', category: 'Intraoral', caption: '', notes: '' });
     setOpen(false);
   };
 
@@ -972,7 +1012,9 @@ function PhotosTab({ toothNumber, patientId }: { toothNumber: number; patientId:
                     <Camera className="h-4 w-4 text-muted-foreground" />
                     <span className="font-medium">{r.category} Photo</span>
                   </div>
+                  {r.caption && <p className="text-xs text-muted-foreground">{r.caption}</p>}
                   {r.notes && <p className="text-xs text-muted-foreground">{r.notes}</p>}
+                  {r.visitId && <p className="text-xs text-muted-foreground">Visit ID: {r.visitId}</p>}
                   <p className="text-xs text-muted-foreground/70">{r.date}</p>
                 </RecordRow>
               ))}
@@ -991,6 +1033,14 @@ function PhotosTab({ toothNumber, patientId }: { toothNumber: number; patientId:
                 <div>
                   <Label className="text-xs">Date</Label>
                   <Input type="date" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} className="min-h-[44px] mt-1" />
+                </div>
+                <div>
+                  <Label className="text-xs">Visit ID</Label>
+                  <Input value={form.visitId} onChange={e => setForm(f => ({ ...f, visitId: e.target.value }))} placeholder="Optional" className="min-h-[44px] mt-1" />
+                </div>
+                <div className="col-span-2">
+                  <Label className="text-xs">Caption</Label>
+                  <Input value={form.caption} onChange={e => setForm(f => ({ ...f, caption: e.target.value }))} placeholder="Describe the photo" className="min-h-[44px] mt-1" />
                 </div>
                 <div className="col-span-2">
                   <Label className="text-xs">Notes</Label>
@@ -1012,12 +1062,12 @@ function RadiographsTab({ toothNumber, patientId }: { toothNumber: number; patie
 
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<Omit<ToothRadiograph, 'id' | 'toothNumber' | 'patientId'>>({
-    date: today(), type: 'Periapical', findings: '', interpretation: '',
+    date: today(), visitId: '', type: 'Periapical', findings: '', interpretation: '',
   });
 
   const save = () => {
     addToothRadiograph({ ...form, toothNumber, patientId });
-    setForm({ date: today(), type: 'Periapical', findings: '', interpretation: '' });
+    setForm({ date: today(), visitId: '', type: 'Periapical', findings: '', interpretation: '' });
     setOpen(false);
   };
 
@@ -1044,6 +1094,7 @@ function RadiographsTab({ toothNumber, patientId }: { toothNumber: number; patie
                   </div>
                   {r.findings && <p className="text-xs text-muted-foreground">Findings: {r.findings}</p>}
                   {r.interpretation && <p className="text-xs text-muted-foreground">Interpretation: {r.interpretation}</p>}
+                  {r.visitId && <p className="text-xs text-muted-foreground">Visit ID: {r.visitId}</p>}
                   <p className="text-xs text-muted-foreground/70">{r.date}</p>
                 </RecordRow>
               ))}
@@ -1057,13 +1108,18 @@ function RadiographsTab({ toothNumber, patientId }: { toothNumber: number; patie
                     <SelectContent>
                       <SelectItem value="Periapical">Periapical</SelectItem>
                       <SelectItem value="Bitewing">Bitewing</SelectItem>
-                      <SelectItem value="CBCT">CBCT</SelectItem>
+                      <SelectItem value="OPG">OPG</SelectItem>
+                      <SelectItem value="Other">Other</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
                   <Label className="text-xs">Date</Label>
                   <Input type="date" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} className="min-h-[44px] mt-1" />
+                </div>
+                <div>
+                  <Label className="text-xs">Visit ID</Label>
+                  <Input value={form.visitId} onChange={e => setForm(f => ({ ...f, visitId: e.target.value }))} placeholder="Optional" className="min-h-[44px] mt-1" />
                 </div>
                 <div className="col-span-2">
                   <Label className="text-xs">Findings</Label>
@@ -1082,9 +1138,65 @@ function RadiographsTab({ toothNumber, patientId }: { toothNumber: number; patie
   );
 }
 
+// ── Tab: Unified chronological timeline ───────────────────────────────────────
+function TimelineTab({ toothNumber, patientId }: { toothNumber: number; patientId: string }) {
+  const {
+    toothDiagnoses, toothTreatments, toothPhotos, toothRadiographs, periodontalEntries,
+  } = useDataStore();
+
+  const events = [
+    ...toothDiagnoses.filter(r => r.patientId === patientId && r.toothNumber === toothNumber)
+      .map(r => ({ id: r.id, date: r.date, kind: 'Diagnosis', title: r.diagnosis, notes: r.notes, meta: `${r.status} · ${r.severity}` })),
+    ...toothTreatments.filter(r => r.patientId === patientId && r.toothNumber === toothNumber)
+      .map(r => ({ id: r.id, date: r.date, kind: 'Treatment', title: r.procedure, notes: r.notes, meta: `${r.treatmentType} · ${r.status}` })),
+    ...toothPhotos.filter(r => r.patientId === patientId && r.toothNumber === toothNumber)
+      .map(r => ({ id: r.id, date: r.date, kind: 'Photo', title: r.caption || `${r.category} photo`, notes: r.notes, meta: r.visitId ? `Visit ${r.visitId}` : r.category })),
+    ...toothRadiographs.filter(r => r.patientId === patientId && r.toothNumber === toothNumber)
+      .map(r => ({ id: r.id, date: r.date, kind: 'Radiograph', title: r.type, notes: r.interpretation || r.findings, meta: r.visitId ? `Visit ${r.visitId}` : '' })),
+    ...periodontalEntries.filter(r => r.patientId === patientId && r.toothNumber === toothNumber)
+      .map(r => ({ id: r.id, date: r.date, kind: 'Periodontal', title: 'Periodontal assessment', notes: r.notes, meta: `Mobility ${r.mobility} · Furcation ${r.furcation}` })),
+  ].sort((a, b) => b.date.localeCompare(a.date));
+
+  const iconFor = (kind: string) => {
+    if (kind === 'Diagnosis') return <Stethoscope className="h-4 w-4" />;
+    if (kind === 'Treatment') return <Wrench className="h-4 w-4" />;
+    if (kind === 'Photo') return <Camera className="h-4 w-4" />;
+    if (kind === 'Radiograph') return <ScanLine className="h-4 w-4" />;
+    return <Activity className="h-4 w-4" />;
+  };
+
+  if (events.length === 0) {
+    return <SectionEmpty label="Timeline Event" onAdd={() => undefined} />;
+  }
+
+  return (
+    <div className="relative space-y-3">
+      <div className="absolute left-5 top-2 bottom-2 w-px bg-border" />
+      {events.map(event => (
+        <div key={`${event.kind}-${event.id}`} className="relative flex gap-3">
+          <div className="z-10 h-10 w-10 rounded-full border bg-card flex items-center justify-center text-primary shrink-0">
+            {iconFor(event.kind)}
+          </div>
+          <div className="flex-1 border rounded-lg p-3 bg-muted/10">
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <p className="font-medium text-sm">{event.title}</p>
+                <p className="text-xs text-muted-foreground">{event.kind} · {event.date}</p>
+              </div>
+              {event.meta && <Badge variant="outline" className="text-[10px] shrink-0">{event.meta}</Badge>}
+            </div>
+            {event.notes && <p className="text-xs text-muted-foreground mt-2">{event.notes}</p>}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // ── Tab Config ────────────────────────────────────────────────────────────────
 const TABS = [
   { value: 'overview',    label: 'Overview',    Icon: Stethoscope },
+  { value: 'timeline',    label: 'Timeline',    Icon: Activity },
   { value: 'diagnosis',   label: 'Diagnosis',   Icon: Stethoscope },
   { value: 'treatments',  label: 'Treatments',  Icon: Wrench },
   { value: 'restorations',label: 'Restorations',Icon: Layers },
@@ -1174,6 +1286,9 @@ export function OdontogramToothSheet({
             <div className="p-5">
               <TabsContent value="overview" className="m-0 focus-visible:outline-none">
                 <OverviewTab toothNumber={toothNumber} patientId={patientId} currentStatus={currentStatus} />
+              </TabsContent>
+              <TabsContent value="timeline" className="m-0 focus-visible:outline-none">
+                <TimelineTab toothNumber={toothNumber} patientId={patientId} />
               </TabsContent>
               <TabsContent value="diagnosis" className="m-0 focus-visible:outline-none">
                 <DiagnosisTab toothNumber={toothNumber} patientId={patientId} />

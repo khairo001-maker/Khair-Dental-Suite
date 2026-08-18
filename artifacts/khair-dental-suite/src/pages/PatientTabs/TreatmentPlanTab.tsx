@@ -18,6 +18,7 @@ const schema = z.object({
   priority: z.enum(['Immediate', 'Short-term', 'Long-term', 'Elective']),
   status: z.enum(['Planned', 'In Progress', 'Completed', 'Cancelled']),
   estimatedSessions: z.coerce.number().min(1),
+  estimatedCost: z.coerce.number().min(0).optional(),
   notes: z.string().optional(),
 });
 
@@ -35,6 +36,7 @@ export default function TreatmentPlanTab({ patientId, t }: { patientId: string, 
       priority: "Short-term",
       status: "Planned",
       estimatedSessions: 1,
+      estimatedCost: undefined,
       notes: "",
     }
   });
@@ -107,6 +109,9 @@ export default function TreatmentPlanTab({ patientId, t }: { patientId: string, 
                 </div>
                 <FormField control={form.control} name="estimatedSessions" render={({ field }) => (
                   <FormItem><FormLabel>Est. Sessions *</FormLabel><FormControl><Input type="number" min="1" {...field} className="min-h-[48px]" /></FormControl></FormItem>
+                )} />
+                <FormField control={form.control} name="estimatedCost" render={({ field }) => (
+                  <FormItem><FormLabel>Estimated Cost</FormLabel><FormControl><Input type="number" min="0" step="0.01" {...field} value={field.value ?? ""} className="min-h-[48px]" /></FormControl></FormItem>
                 )} />
                 <FormField control={form.control} name="notes" render={({ field }) => (
                   <FormItem><FormLabel>Notes</FormLabel><FormControl><Input {...field} className="min-h-[48px]" /></FormControl></FormItem>
