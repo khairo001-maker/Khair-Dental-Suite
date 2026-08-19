@@ -40,7 +40,7 @@ export class KhairDatabase extends Dexie {
   constructor() {
     super("khair-dental-suite");
     this.version(1).stores({
-      patients: "id, patientNumber, status, registeredAt, updatedAt, deletedAt",
+      patients: "id, &patientNumber, status, registeredAt, updatedAt, deletedAt",
       visits: "id, patientId, date, status, updatedAt, deletedAt",
       treatmentPlans: "id, patientId, status, updatedAt, deletedAt",
       financialRecords: "id, patientId, date, updatedAt, deletedAt",
