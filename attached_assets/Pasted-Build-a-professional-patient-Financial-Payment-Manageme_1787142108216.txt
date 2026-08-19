@@ -1,0 +1,244 @@
+Build a professional patient Financial & Payment Management module.
+
+IMPORTANT:
+- Preserve all existing functionality.
+- Do not rebuild or remove the existing Patients, Odontogram, Tooth Clinical Record, Treatment Plan, or Visits modules.
+- Do not add a backend.
+- Keep the application offline-first.
+- Do not use fake patient or financial data.
+
+The Financial module must be the SINGLE SOURCE OF TRUTH for all financial records.
+
+1. PATIENT FINANCIAL SUMMARY
+
+Create a Financial section inside each Patient Profile showing:
+
+- Total treatment cost
+- Total paid
+- Remaining balance
+- Credit balance if payments exceed the current treatment cost
+- Number of payments
+- Payment status:
+  - Unpaid
+  - Partially Paid
+  - Paid in Full
+  - Credit
+
+Calculate all values automatically.
+
+2. TREATMENT COSTS
+
+Allow Treatment Plan items to have:
+
+- Treatment ID
+- Patient ID
+- Tooth ID(s)
+- Procedure
+- Description
+- Estimated cost
+- Final cost
+- Currency
+- Status
+- Date
+
+Do not duplicate treatment items.
+
+The Financial module must reference existing Treatment Plan IDs.
+
+3. PAYMENTS
+
+Allow the clinician to record multiple payments for the same patient.
+
+Each payment must contain:
+
+- Payment ID
+- Patient ID
+- Date
+- Amount
+- Currency
+- Payment method
+- Visit ID (optional)
+- Treatment Plan ID (optional)
+- Notes
+- CreatedAt
+- UpdatedAt
+- DeletedAt
+
+Payment methods:
+
+- Cash
+- Card
+- Bank Transfer
+- Electronic Wallet
+- Other
+
+4. PARTIAL PAYMENTS
+
+A patient may:
+
+- Pay the full amount at once.
+- Pay a deposit before treatment.
+- Pay in multiple installments.
+- Pay different amounts during different visits.
+
+The system must automatically calculate:
+
+Total Treatment Cost
+-
+Total Payments
+=
+Remaining Balance
+
+5. PAYMENT ALLOCATION
+
+Allow a payment to be:
+
+- General patient payment
+- Linked to a specific Treatment Plan item
+- Linked to a specific visit
+
+Do not create duplicate transactions.
+
+If a payment is allocated to a treatment, the treatment should show the amount paid and remaining amount.
+
+6. FINANCIAL TRANSACTION HISTORY
+
+Create a chronological transaction history containing:
+
+- Date
+- Transaction type
+- Treatment
+- Payment
+- Amount
+- Currency
+- Balance after transaction
+- Notes
+
+Make the history easy to read on iPad.
+
+7. MULTIPLE CURRENCIES
+
+Support configurable currencies.
+
+Initially support:
+
+- EUR
+- USD
+- TRY
+- SYP
+
+The default currency must be configurable in Settings.
+
+IMPORTANT:
+Do not automatically convert currencies unless an explicit exchange rate is provided.
+
+8. TREATMENT ESTIMATE
+
+Allow the clinician to generate a treatment cost estimate from existing Treatment Plan items.
+
+Show:
+
+- Procedure
+- Tooth
+- Quantity
+- Unit cost
+- Total cost
+- Overall treatment estimate
+
+Do not create a payment automatically when an estimate is created.
+
+9. RECEIPTS
+
+Prepare the architecture for generating a printable/shareable payment receipt.
+
+A receipt should eventually contain:
+
+- Clinic information
+- Patient name
+- Patient number
+- Date
+- Payment amount
+- Currency
+- Payment method
+- Related treatment
+- Remaining balance
+
+Do not require a backend.
+
+10. FINANCIAL DASHBOARD
+
+Inside the patient profile show:
+
+- Total
+- Paid
+- Remaining
+
+Use a clear visual representation.
+
+11. CLINIC FINANCIAL DASHBOARD
+
+Prepare a separate Financial Dashboard for the clinic showing:
+
+- Today's payments
+- This week's payments
+- This month's payments
+- Outstanding patient balances
+- Number of patients with unpaid balances
+
+Do not calculate profit yet.
+Do not implement expenses yet.
+
+12. DATA INTEGRITY
+
+Financial records must never be permanently deleted.
+
+Use soft deletion:
+
+deletedAt
+
+When a payment is edited, preserve:
+
+createdAt
+updatedAt
+
+Do not modify historical transactions silently.
+
+13. DATA ARCHITECTURE
+
+Create clean TypeScript interfaces/types for:
+
+- FinancialAccount
+- TreatmentCost
+- Payment
+- PaymentAllocation
+- FinancialTransaction
+
+Use IDs and relationships.
+
+Do not duplicate patient, visit, treatment, or tooth data.
+
+Prepare everything for IndexedDB/Dexie.
+
+14. UX
+
+Optimize for:
+
+- iPad
+- Android tablets
+- Touch interaction
+- Arabic
+- English
+
+Use large buttons and clear financial summaries.
+
+Make the interface suitable for real dental clinic use.
+
+15. IMPORTANT SAFETY AND PRIVACY RULE
+
+Do not store card numbers, CVV codes, passwords, or other sensitive payment credentials.
+
+Only store the payment method and transaction information needed for the clinic's records.
+
+Do not introduce a backend.
+Do not use mock data.
+Do not break existing functionality.
