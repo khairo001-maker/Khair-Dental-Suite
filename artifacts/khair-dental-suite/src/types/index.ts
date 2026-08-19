@@ -234,6 +234,7 @@ export interface PatientDocument {
 // ── Patient (expanded) ────────────────────────────────────────
 export interface Patient {
   id: string;
+  patientNumber?: string;
   // Personal
   fullName: string;
   dob: string;
@@ -404,6 +405,7 @@ export const TOOTH_STATUS_CONFIG: Record<
  * Acts as the chart state anchor; all child records reference this pair.
  */
 export interface ToothRecord {
+  id?: string;
   patientId: string;
   toothNumber: number;       // FDI number (11-18, 21-28, 31-38, 41-48)
   status: ToothStatus;

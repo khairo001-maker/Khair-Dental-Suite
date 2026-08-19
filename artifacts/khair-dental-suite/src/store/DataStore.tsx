@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import {
   Patient,
   ClinicalCase,
@@ -32,6 +32,8 @@ import {
   Payment,
   PaymentAllocation,
 } from '../types';
+import { repositories } from "@/db/repository";
+import { patientService } from "@/db/services";
 
 interface DataStoreContextType {
   // ── Patients ─────────────────────────────────────────────
@@ -155,8 +157,9 @@ export const useDataStore = () => {
 };
 
 export function DataStoreProvider({ children }: { children: React.ReactNode }) {
-  const generateId = () => Math.random().toString(36).substring(2, 9);
+  const generateId = () => crypto.randomUUID();
   const now = () => new Date().toISOString();
+  const hydrated = useRef(false);
 
   // ── Core patient state ──────────────────────────────────
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -193,17 +196,54 @@ export function DataStoreProvider({ children }: { children: React.ReactNode }) {
   const [toothPhotos, setToothPhotos] = useState<ToothPhoto[]>([]);
   const [toothRadiographs, setToothRadiographs] = useState<ToothRadiograph[]>([]);
 
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([
+      repositories.patients.list(),
+      repositories.visits.list(),
+      repositories.treatmentPlans.list(),
+      repositories.financialRecords.list(),
+      repositories.payments.list(),
+      repositories.documents.list(),
+      repositories.clinicalPhotos.list(),
+      repositories.radiographs.list(),
+      repositories.odontogramRecords.list(),
+    ]).then(([storedPatients, storedVisits, storedPlans, storedFinancial, storedPayments, storedDocuments, storedPhotos, storedRadiographs, storedOdontogram]) => {
+      if (cancelled) return;
+      setPatients(storedPatients as Patient[]);
+      setVisits(storedVisits as Visit[]);
+      setTreatmentPlanItems(storedPlans as TreatmentPlanItem[]);
+      setFinancialRecords(storedFinancial as FinancialRecord[]);
+      setPayments(storedPayments as Payment[]);
+      setPatientDocuments(storedDocuments as PatientDocument[]);
+      setToothPhotos(storedPhotos as ToothPhoto[]);
+      setToothRadiographs(storedRadiographs as ToothRadiograph[]);
+      setToothRecords(storedOdontogram as ToothRecord[]);
+      hydrated.current = true;
+    }).catch(error => console.error("Unable to hydrate local database", error));
+    return () => { cancelled = true; };
+  }, []);
+
+  const persist = (task: Promise<unknown>) => {
+    task.catch(error => console.error("Unable to persist local database change", error));
+  };
+
   const setToothStatus = (patientId: string, toothNumber: number, status: ToothStatus) => {
+    const timestamp = now();
+    const record: ToothRecord = { id: generateId(), patientId, toothNumber, status, lastUpdated: timestamp };
+    const dbRecord = { ...record, createdAt: timestamp, updatedAt: timestamp };
     setToothRecords(prev => {
       const idx = prev.findIndex(r => r.patientId === patientId && r.toothNumber === toothNumber);
-      const record: ToothRecord = { patientId, toothNumber, status, lastUpdated: now() };
       if (idx >= 0) {
         const updated = [...prev];
+        record.id = updated[idx].id ?? record.id;
+        dbRecord.id = record.id;
         updated[idx] = record;
         return updated;
       }
       return [...prev, record];
     });
+    persist(repositories.odontogramRecords.put(dbRecord as any));
   };
 
   const getToothRecord = (patientId: string, toothNumber: number) =>
@@ -215,14 +255,28 @@ export function DataStoreProvider({ children }: { children: React.ReactNode }) {
         // Patients
         patients,
         setPatients,
-        addPatient: (p) => setPatients(prev => [...prev, { ...p, id: generateId() }]),
-        updatePatient: (id, updates) => setPatients(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p)),
+        addPatient: (p) => {
+          const id = generateId();
+          const timestamp = now();
+          const year = new Date().getFullYear();
+          const next = patients.reduce((max, patient) => {
+            const match = patient.patientNumber?.match(/^KD-\d{4}-(\d{6})$/);
+            return match && patient.patientNumber?.startsWith(`KD-${year}-`) ? Math.max(max, Number(match[1])) : max;
+          }, 0) + 1;
+          const record = { ...p, id, patientNumber: p.patientNumber ?? `KD-${year}-${String(next).padStart(6, "0")}`, createdAt: timestamp, updatedAt: timestamp };
+          setPatients(prev => [...prev, record]);
+          persist(repositories.patients.put(record as any));
+        },
+        updatePatient: (id, updates) => {
+          setPatients(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
+          persist(repositories.patients.update(id, updates));
+        },
 
         // Visits
         visits,
-        addVisit: (v) => { const id = generateId(); setVisits(prev => [...prev, { ...v, id }]); return id; },
-        updateVisit: (id, updates) => setVisits(prev => prev.map(v => v.id === id ? { ...v, ...updates } : v)),
-        deleteVisit: (id) => setVisits(prev => prev.map(v => v.id === id ? { ...v, deletedAt: now(), status: 'Cancelled', updatedAt: now() } : v)),
+        addVisit: (v) => { const id = generateId(); const timestamp = now(); const record = { ...v, id, createdAt: timestamp, updatedAt: timestamp }; setVisits(prev => [...prev, record]); persist(repositories.visits.put(record)); return id; },
+        updateVisit: (id, updates) => { setVisits(prev => prev.map(v => v.id === id ? { ...v, ...updates, updatedAt: now() } : v)); persist(repositories.visits.update(id, updates)); },
+        deleteVisit: (id) => { const updates = { deletedAt: now(), status: 'Cancelled' as const }; setVisits(prev => prev.map(v => v.id === id ? { ...v, ...updates, updatedAt: now() } : v)); persist(repositories.visits.update(id, updates)); },
         visitDiagnoses,
         addVisitDiagnosis: (d) => { const id = generateId(); setVisitDiagnoses(prev => [...prev, { ...d, id }]); return id; },
         visitProcedures,
@@ -234,26 +288,26 @@ export function DataStoreProvider({ children }: { children: React.ReactNode }) {
 
         // Treatment Plan
         treatmentPlanItems,
-        addTreatmentPlanItem: (item) => setTreatmentPlanItems(prev => [...prev, { ...item, id: generateId() }]),
-        updateTreatmentPlanItem: (id, updates) => setTreatmentPlanItems(prev => prev.map(i => i.id === id ? { ...i, ...updates } : i)),
-        deleteTreatmentPlanItem: (id) => setTreatmentPlanItems(prev => prev.filter(i => i.id !== id)),
+        addTreatmentPlanItem: (item) => { const id = generateId(); const timestamp = now(); const record = { ...item, id, createdAt: item.createdAt ?? timestamp, updatedAt: timestamp }; setTreatmentPlanItems(prev => [...prev, record]); persist(repositories.treatmentPlans.put(record as any)); },
+        updateTreatmentPlanItem: (id, updates) => { setTreatmentPlanItems(prev => prev.map(i => i.id === id ? { ...i, ...updates, updatedAt: now() } : i)); persist(repositories.treatmentPlans.update(id, updates)); },
+        deleteTreatmentPlanItem: (id) => { const updates = { deletedAt: now() }; setTreatmentPlanItems(prev => prev.map(i => i.id === id ? { ...i, ...updates } : i)); persist(repositories.treatmentPlans.update(id, updates)); },
 
         // Financial
         financialRecords,
-        addFinancialRecord: (r) => setFinancialRecords(prev => [...prev, { ...r, id: generateId() }]),
-        updateFinancialRecord: (id, updates) => setFinancialRecords(prev => prev.map(r => r.id === id ? { ...r, ...updates } : r)),
-        deleteFinancialRecord: (id) => setFinancialRecords(prev => prev.filter(r => r.id !== id)),
+        addFinancialRecord: (r) => { const id = generateId(); const timestamp = now(); const record = { ...r, id, createdAt: timestamp, updatedAt: timestamp }; setFinancialRecords(prev => [...prev, record]); persist(repositories.financialRecords.put(record)); },
+        updateFinancialRecord: (id, updates) => { setFinancialRecords(prev => prev.map(r => r.id === id ? { ...r, ...updates } : r)); persist(repositories.financialRecords.update(id, updates)); },
+        deleteFinancialRecord: (id) => { const updates = { deletedAt: now() }; setFinancialRecords(prev => prev.map(r => r.id === id ? { ...r, ...updates } : r)); persist(repositories.financialRecords.update(id, updates)); },
         payments,
-        addPayment: (p) => { const id = generateId(); setPayments(prev => [...prev, { ...p, id }]); return id; },
-        updatePayment: (id, updates) => setPayments(prev => prev.map(p => p.id === id ? { ...p, ...updates, updatedAt: now() } : p)),
-        deletePayment: (id) => setPayments(prev => prev.map(p => p.id === id ? { ...p, deletedAt: now(), updatedAt: now() } : p)),
+        addPayment: (p) => { const id = generateId(); const timestamp = now(); const record = { ...p, id, createdAt: p.createdAt ?? timestamp, updatedAt: timestamp }; setPayments(prev => [...prev, record]); persist(repositories.payments.put(record)); return id; },
+        updatePayment: (id, updates) => { setPayments(prev => prev.map(p => p.id === id ? { ...p, ...updates, updatedAt: now() } : p)); persist(repositories.payments.update(id, updates)); },
+        deletePayment: (id) => { const updates = { deletedAt: now() }; setPayments(prev => prev.map(p => p.id === id ? { ...p, ...updates, updatedAt: now() } : p)); persist(repositories.payments.update(id, updates)); },
         paymentAllocations,
         addPaymentAllocation: (a) => { const id = generateId(); setPaymentAllocations(prev => [...prev, { ...a, id }]); return id; },
 
         // Documents
         patientDocuments,
-        addPatientDocument: (d) => setPatientDocuments(prev => [...prev, { ...d, id: generateId() }]),
-        deletePatientDocument: (id) => setPatientDocuments(prev => prev.filter(d => d.id !== id)),
+        addPatientDocument: (d) => { const id = generateId(); const timestamp = now(); const record = { ...d, id, createdAt: timestamp, updatedAt: timestamp }; setPatientDocuments(prev => [...prev, record]); persist(repositories.documents.put(record)); },
+        deletePatientDocument: (id) => { const updates = { deletedAt: now() }; setPatientDocuments(prev => prev.map(d => d.id === id ? { ...d, ...updates } : d)); persist(repositories.documents.update(id, updates)); },
 
         // Clinical
         clinicalCases,
@@ -315,12 +369,12 @@ export function DataStoreProvider({ children }: { children: React.ReactNode }) {
         deletePeriodontalEntry: (id) => setPeriodontalEntries(prev => prev.filter(e => e.id !== id)),
 
         toothPhotos,
-        addToothPhoto: (p) => setToothPhotos(prev => [...prev, { ...p, id: generateId() }]),
-        deleteToothPhoto: (id) => setToothPhotos(prev => prev.filter(p => p.id !== id)),
+        addToothPhoto: (p) => { const id = generateId(); const timestamp = now(); const record = { ...p, id, createdAt: timestamp, updatedAt: timestamp }; setToothPhotos(prev => [...prev, record]); persist(repositories.clinicalPhotos.put(record as any)); },
+        deleteToothPhoto: (id) => { const updates = { deletedAt: now() }; setToothPhotos(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p)); persist(repositories.clinicalPhotos.update(id, updates)); },
 
         toothRadiographs,
-        addToothRadiograph: (r) => setToothRadiographs(prev => [...prev, { ...r, id: generateId() }]),
-        deleteToothRadiograph: (id) => setToothRadiographs(prev => prev.filter(r => r.id !== id)),
+        addToothRadiograph: (r) => { const id = generateId(); const timestamp = now(); const record = { ...r, id, createdAt: timestamp, updatedAt: timestamp }; setToothRadiographs(prev => [...prev, record]); persist(repositories.radiographs.put(record as any)); },
+        deleteToothRadiograph: (id) => { const updates = { deletedAt: now() }; setToothRadiographs(prev => prev.map(r => r.id === id ? { ...r, ...updates } : r)); persist(repositories.radiographs.update(id, updates)); },
       }}
     >
       {children}
