@@ -358,7 +358,7 @@ function TreatmentsTab({ toothNumber, patientId }: { toothNumber: number; patien
                     <SelectTrigger className="min-h-[44px] mt-1"><SelectValue placeholder="Optional — select a plan item" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">Not linked</SelectItem>
-                      {treatmentPlanItems.filter(i => i.patientId === patientId && (i.toothNumber === String(toothNumber) || i.toothNumber === '')).map(i => (
+                      {treatmentPlanItems.filter(i => i.patientId === patientId && !i.deletedAt && (i.toothNumber === String(toothNumber) || i.toothNumber === '')).map(i => (
                         <SelectItem key={i.id} value={i.id}>{i.procedure} · {i.status}</SelectItem>
                       ))}
                     </SelectContent>

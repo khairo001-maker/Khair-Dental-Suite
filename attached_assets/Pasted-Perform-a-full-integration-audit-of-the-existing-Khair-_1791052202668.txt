@@ -1,0 +1,132 @@
+Perform a full integration audit of the existing Khair Dental Suite application.
+
+IMPORTANT:
+- Do NOT redesign the application.
+- Do NOT remove existing functionality.
+- Do NOT introduce a backend.
+- Do NOT add mock data.
+- Do NOT rewrite working modules unnecessarily.
+
+Review the complete existing implementation of:
+
+1. Patients
+2. Patient Profile
+3. Odontogram
+4. Tooth Clinical Record
+5. Treatment Plan
+6. Visits / Clinical Encounters
+7. Financial & Payments
+8. Clinical Photography
+9. Radiology
+
+AUDIT THE DATA FLOW
+
+Verify that this workflow works correctly:
+
+Patient
+→ Tooth
+→ Visit
+→ Diagnosis
+→ Treatment
+→ Treatment Plan
+→ Clinical Photo
+→ Radiograph
+→ Financial Record
+→ Payment
+
+Verify that all relationships use stable IDs and that records are not duplicated unnecessarily.
+
+TEST THESE SCENARIOS:
+
+A. Patient creation
+- Create a patient.
+- Verify that a unique patient number is generated.
+- Close and reopen the patient.
+- Verify that the patient remains available.
+
+B. Tooth
+- Open the patient's odontogram.
+- Select an FDI tooth.
+- Open its clinical record.
+- Add a diagnosis.
+- Add a treatment.
+- Verify that the information remains linked to the correct tooth.
+
+C. Visit
+- Create a visit.
+- Select one or more teeth.
+- Add diagnosis and procedure.
+- Verify that the visit appears in the patient's timeline.
+- Verify that the tooth history references the visit.
+
+D. Treatment Plan
+- Create a treatment plan item for a tooth.
+- Change its status.
+- Verify that the same treatment item is referenced by the related visit.
+- Do not create duplicates.
+
+E. Financial
+- Add a treatment cost.
+- Record a partial payment.
+- Verify:
+  Total
+  Paid
+  Remaining
+- Add a second payment.
+- Verify that the balance updates correctly.
+- Verify that payments remain linked to the correct patient.
+
+F. Clinical Photos
+- Import an image.
+- Link it to a patient.
+- Optionally link it to a visit and tooth.
+- Verify that it appears in the correct clinical photo gallery.
+- Verify that deleting it uses soft deletion.
+
+G. Radiology
+- Import a radiograph.
+- Link it to a patient.
+- Optionally link it to a visit and tooth.
+- Verify that it appears in the correct radiology section.
+- Verify that deleting it uses soft deletion.
+
+H. Persistence
+Verify that data survives:
+- Page refresh
+- Navigation between screens
+- Closing and reopening the application
+
+I. Data integrity
+Check for:
+- Duplicate records
+- Broken IDs
+- Orphaned records
+- Incorrect financial calculations
+- Incorrect tooth relationships
+- Missing patient relationships
+- Broken navigation
+- TypeScript errors
+- Runtime errors
+- Console errors
+
+J. Responsive design
+Verify the application for:
+- iPad/tablet portrait
+- iPad/tablet landscape
+- Touch interaction
+- Arabic interface
+- English interface
+
+IMPORTANT:
+If you find bugs, fix them directly.
+
+After completing the audit, provide a concise report containing:
+
+1. Modules verified
+2. Bugs found
+3. Bugs fixed
+4. Remaining issues
+5. Any architectural problems that should be addressed before building Endodontics and Implantology
+
+Do not add new features during this audit.
+Focus only on stability, integration, persistence, and data integrity.

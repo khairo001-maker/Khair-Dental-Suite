@@ -30,8 +30,9 @@ export default function FinancialTab({ patientId, t }: { patientId: string; t: (
   });
 
   const patientPayments = payments.filter(p => p.patientId === patientId && !p.deletedAt);
-  const planItems = treatmentPlanItems.filter(i => i.patientId === patientId && i.status !== "Cancelled");
-  const costs = planItems.reduce((sum, item) => sum + (item.estimatedCost || 0), 0);
+  const planItems = treatmentPlanItems.filter(i => i.patientId === patientId && !i.deletedAt && i.status !== "Cancelled");
+  const currencyPlanItems = planItems.filter(item => (item.currency || "USD") === currency);
+  const costs = currencyPlanItems.reduce((sum, item) => sum + (item.estimatedCost || 0), 0);
   const paymentsInCurrency = patientPayments.filter(p => p.currency === currency);
   const paid = paymentsInCurrency.reduce((sum, p) => sum + p.amount, 0);
   const balance = costs - paid;
@@ -39,11 +40,11 @@ export default function FinancialTab({ patientId, t }: { patientId: string; t: (
   const status = credit > 0 ? "Credit" : paid === 0 ? "Unpaid" : balance > 0 ? "Partially Paid" : "Paid in Full";
 
   const transactions = useMemo(() => {
-    const treatmentEvents = planItems.filter(i => (i.estimatedCost || 0) > 0).map(i => ({
+    const treatmentEvents = currencyPlanItems.filter(i => (i.estimatedCost || 0) > 0).map(i => ({
       id: `treatment-${i.id}`, date: i.createdAt || i.updatedAt, type: "Treatment",
       description: i.procedure, amount: i.estimatedCost || 0, currency, notes: `Tooth ${i.toothNumber}`,
     }));
-    const paymentEvents = patientPayments.map(p => ({
+    const paymentEvents = paymentsInCurrency.map(p => ({
       id: p.id, date: p.date, type: "Payment", description: `${p.paymentMethod} payment`,
       amount: p.amount, currency: p.currency, notes: p.notes,
     }));

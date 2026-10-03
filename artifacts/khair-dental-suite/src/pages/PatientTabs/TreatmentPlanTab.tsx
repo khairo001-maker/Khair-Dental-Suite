@@ -19,6 +19,7 @@ const schema = z.object({
   status: z.enum(['Planned', 'In Progress', 'Completed', 'Cancelled']),
   estimatedSessions: z.coerce.number().min(1),
   estimatedCost: z.coerce.number().min(0).optional(),
+  currency: z.enum(["EUR", "USD", "TRY", "SYP"]),
   notes: z.string().optional(),
 });
 
@@ -26,7 +27,7 @@ export default function TreatmentPlanTab({ patientId, t }: { patientId: string, 
   const { treatmentPlanItems, addTreatmentPlanItem, updateTreatmentPlanItem, deleteTreatmentPlanItem } = useDataStore();
   const [isOpen, setIsOpen] = useState(false);
   
-  const items = treatmentPlanItems.filter(i => i.patientId === patientId).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  const items = treatmentPlanItems.filter(i => i.patientId === patientId && !i.deletedAt).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
@@ -37,6 +38,7 @@ export default function TreatmentPlanTab({ patientId, t }: { patientId: string, 
       status: "Planned",
       estimatedSessions: 1,
       estimatedCost: undefined,
+      currency: "USD",
       notes: "",
     }
   });
@@ -112,6 +114,14 @@ export default function TreatmentPlanTab({ patientId, t }: { patientId: string, 
                 )} />
                 <FormField control={form.control} name="estimatedCost" render={({ field }) => (
                   <FormItem><FormLabel>Estimated Cost</FormLabel><FormControl><Input type="number" min="0" step="0.01" {...field} value={field.value ?? ""} className="min-h-[48px]" /></FormControl></FormItem>
+                )} />
+                <FormField control={form.control} name="currency" render={({ field }) => (
+                  <FormItem><FormLabel>Cost Currency</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl><SelectTrigger className="min-h-[48px]"><SelectValue /></SelectTrigger></FormControl>
+                      <SelectContent>{["EUR", "USD", "TRY", "SYP"].map(value => <SelectItem key={value} value={value}>{value}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </FormItem>
                 )} />
                 <FormField control={form.control} name="notes" render={({ field }) => (
                   <FormItem><FormLabel>Notes</FormLabel><FormControl><Input {...field} className="min-h-[48px]" /></FormControl></FormItem>

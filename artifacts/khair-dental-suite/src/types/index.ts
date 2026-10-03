@@ -134,9 +134,11 @@ export interface TreatmentPlanItem {
   estimatedSessions: number;
   completedSessions: number;
   estimatedCost?: number;
+  currency?: Currency;
   notes: string;
   createdAt: string;
   updatedAt: string;
+  deletedAt?: string;
 }
 
 // ── Financial ─────────────────────────────────────────────────

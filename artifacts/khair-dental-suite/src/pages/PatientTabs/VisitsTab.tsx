@@ -27,6 +27,8 @@ const procedureTypes: VisitProcedureType[] = [
 ];
 
 type Draft = Omit<Visit, "id" | "createdAt" | "updatedAt" | "deletedAt" | "diagnosisIds" | "procedureIds" | "attachmentIds" | "radiographIds">;
+type DiagnosisDraft = Omit<VisitDiagnosis, "id" | "patientId" | "visitId"> & { id?: string };
+type ProcedureDraft = Omit<VisitProcedure, "id" | "patientId" | "visitId"> & { id?: string };
 
 const blankDraft = (patientId: string): Draft => ({
   patientId, date: new Date().toISOString().split("T")[0], time: "09:00",
@@ -41,21 +43,22 @@ const blankDraft = (patientId: string): Draft => ({
 export default function VisitsTab({ patientId, t }: { patientId: string; t: (key: string) => string }) {
   const {
     visits, addVisit, updateVisit, deleteVisit,
-    visitDiagnoses, addVisitDiagnosis, visitProcedures, addVisitProcedure,
+    visitDiagnoses, addVisitDiagnosis, updateVisitDiagnosis, deleteVisitDiagnosis,
+    visitProcedures, addVisitProcedure, updateVisitProcedure, deleteVisitProcedure,
     treatmentPlanItems,
   } = useDataStore();
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState<Draft>(() => blankDraft(patientId));
-  const [diagnoses, setDiagnoses] = useState<Array<Omit<VisitDiagnosis, "id" | "patientId" | "visitId">>>([]);
-  const [procedures, setProcedures] = useState<Array<Omit<VisitProcedure, "id" | "patientId" | "visitId">>>([]);
+  const [diagnoses, setDiagnoses] = useState<DiagnosisDraft[]>([]);
+  const [procedures, setProcedures] = useState<ProcedureDraft[]>([]);
   const [diagnosisDraft, setDiagnosisDraft] = useState({ diagnosis: "", notes: "", status: "Active" as VisitDiagnosis["status"], toothNumber: "" });
   const [procedureDraft, setProcedureDraft] = useState({ type: "Examination" as VisitProcedureType, notes: "", status: "Completed" as VisitProcedure["status"], toothNumbers: [] as number[], treatmentPlanItemId: "", clinician: "" });
 
   const patientVisits = visits
     .filter(v => v.patientId === patientId && !v.deletedAt)
     .sort((a, b) => `${b.date}T${b.startTime || b.time}`.localeCompare(`${a.date}T${a.startTime || a.time}`));
-  const planItems = treatmentPlanItems.filter(i => i.patientId === patientId);
+  const planItems = treatmentPlanItems.filter(i => i.patientId === patientId && !i.deletedAt);
 
   const reset = () => {
     setDraft(blankDraft(patientId));
@@ -67,15 +70,47 @@ export default function VisitsTab({ patientId, t }: { patientId: string; t: (key
   };
 
   const submit = () => {
-    if (!draft.chiefComplaint.trim() && !draft.generalNotes.trim()) return;
+    if (
+      !draft.chiefComplaint.trim() &&
+      !draft.generalNotes.trim() &&
+      !draft.clinicalFindings.trim() &&
+      !draft.diagnosis.trim() &&
+      !draft.treatmentDone.trim() &&
+      diagnoses.length === 0 &&
+      procedures.length === 0
+    ) return;
     const now = new Date().toISOString();
     const visitId = editingId || addVisit({
       ...draft, diagnosisIds: [], procedureIds: [], attachmentIds: [], radiographIds: [],
       createdAt: now, updatedAt: now,
     });
-    const diagnosisIds = editingId ? (visits.find(v => v.id === editingId)?.diagnosisIds || []) : diagnoses.map(d => addVisitDiagnosis({ ...d, patientId, visitId, date: d.date || draft.date }));
-    const procedureIds = editingId ? (visits.find(v => v.id === editingId)?.procedureIds || []) : procedures.map(p => addVisitProcedure({ ...p, patientId, visitId, date: p.date || draft.date, clinician: draft.dentist }));
-    updateVisit(visitId, { ...draft, diagnosisIds, procedureIds, updatedAt: now });
+    const storedDiagnoses = visitDiagnoses.filter(d => d.patientId === patientId && d.visitId === visitId);
+    const storedProcedures = visitProcedures.filter(p => p.patientId === patientId && p.visitId === visitId);
+    const retainedDiagnosisIds = new Set<string>();
+    const diagnosisIds = diagnoses.map(d => {
+      const { id, ...values } = d;
+      if (id) {
+        retainedDiagnosisIds.add(id);
+        updateVisitDiagnosis(id, { ...values, patientId, visitId, date: values.date || draft.date });
+        return id;
+      }
+      return addVisitDiagnosis({ ...values, patientId, visitId, date: values.date || draft.date });
+    });
+    const retainedProcedureIds = new Set<string>();
+    const procedureIds = procedures.map(p => {
+      const { id, ...values } = p;
+      const record = { ...values, patientId, visitId, date: values.date || draft.date, clinician: values.clinician || draft.dentist };
+      if (id) {
+        retainedProcedureIds.add(id);
+        updateVisitProcedure(id, record);
+        return id;
+      }
+      return addVisitProcedure(record);
+    });
+    storedDiagnoses.filter(d => !retainedDiagnosisIds.has(d.id)).forEach(d => deleteVisitDiagnosis(d.id));
+    storedProcedures.filter(p => !retainedProcedureIds.has(p.id)).forEach(p => deleteVisitProcedure(p.id));
+    const treatmentPlanItemIds = [...new Set(procedures.map(p => p.treatmentPlanItemId).filter((id): id is string => Boolean(id)))];
+    updateVisit(visitId, { ...draft, diagnosisIds, procedureIds, treatmentPlanItemIds, updatedAt: now });
     setOpen(false);
     reset();
   };
@@ -83,15 +118,20 @@ export default function VisitsTab({ patientId, t }: { patientId: string; t: (key
   const edit = (visit: Visit) => {
     setEditingId(visit.id);
     setDraft({ ...blankDraft(patientId), ...visit });
-    setDiagnoses(visitDiagnoses.filter(d => d.visitId === visit.id).map(({ id, patientId: _p, visitId: _v, ...d }) => d));
-    setProcedures(visitProcedures.filter(p => p.visitId === visit.id).map(({ id, patientId: _p, visitId: _v, ...p }) => p));
+    setDiagnoses(visitDiagnoses.filter(d => d.patientId === patientId && d.visitId === visit.id).map(({ patientId: _p, visitId: _v, ...d }) => d));
+    setProcedures(visitProcedures.filter(p => p.patientId === patientId && p.visitId === visit.id).map(({ patientId: _p, visitId: _v, ...p }) => p));
     setOpen(true);
   };
 
   const toggleTooth = (n: number) => setDraft(d => ({ ...d, toothNumbers: d.toothNumbers.includes(n) ? d.toothNumbers.filter(x => x !== n) : [...d.toothNumbers, n] }));
   const addDiagnosis = () => {
     if (!diagnosisDraft.diagnosis.trim()) return;
-    setDiagnoses(ds => [...ds, { ...diagnosisDraft, date: draft.date, toothNumber: diagnosisDraft.toothNumber ? Number(diagnosisDraft.toothNumber) : undefined }]);
+    const toothNumber = diagnosisDraft.toothNumber ? Number(diagnosisDraft.toothNumber) : undefined;
+    if (toothNumber !== undefined && (!Number.isInteger(toothNumber) || !teeth.includes(toothNumber))) return;
+    if (toothNumber !== undefined && !draft.toothNumbers.includes(toothNumber)) {
+      setDraft(current => ({ ...current, toothNumbers: [...current.toothNumbers, toothNumber] }));
+    }
+    setDiagnoses(ds => [...ds, { ...diagnosisDraft, date: draft.date, toothNumber }]);
     setDiagnosisDraft({ diagnosis: "", notes: "", status: "Active", toothNumber: "" });
   };
   const addProcedure = () => {
