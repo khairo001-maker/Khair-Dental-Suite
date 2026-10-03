@@ -50,4 +50,11 @@ export const repositories = {
   radiographs: new Repository(db.radiographs),
   odontogramRecords: new Repository(db.odontogramRecords),
   documents: new Repository(db.documents),
+  clinicalPhotoRecords: new Repository(db.clinicalPhotoRecords),
+  photoAttachments: new Repository(db.photoAttachments),
+  radiographRecords: new Repository(db.radiographRecords),
+  radiographAttachments: new Repository(db.radiographAttachments),
+  dicomStudies: new Repository(db.dicomStudies),
+  dicomSeries: new Repository(db.dicomSeries),
+  dicomInstances: new Repository(db.dicomInstances),
 };

@@ -23,6 +23,8 @@ import VisitsTab from "./PatientTabs/VisitsTab";
 import TreatmentPlanTab from "./PatientTabs/TreatmentPlanTab";
 import FinancialTab from "./PatientTabs/FinancialTab";
 import DocumentsTab from "./PatientTabs/DocumentsTab";
+import { ClinicalPhotosGallery } from "@/components/ClinicalPhotosGallery";
+import { RadiologyGallery } from "@/components/RadiologyGallery";
 
 export default function PatientDetail() {
   const { id } = useParams<{ id: string }>();
@@ -205,18 +207,12 @@ export default function PatientDetail() {
 
             {/* Tab 5: Photos */}
             <TabsContent value="photos" className="focus-visible:outline-none">
-              <div className="flex justify-end mb-4">
-                <Button className="min-h-[44px]"><Camera className="h-4 w-4 mr-2" /> Add Photo</Button>
-              </div>
-              <EmptyState icon={Camera} title={t("photos.empty")} description={t("photos.empty_subtext")} />
+              <ClinicalPhotosGallery patientId={patient.id} />
             </TabsContent>
 
             {/* Tab 6: Radiographs */}
             <TabsContent value="radiology" className="focus-visible:outline-none">
-              <div className="flex justify-end mb-4">
-                <Button className="min-h-[44px]"><ScanLine className="h-4 w-4 mr-2" /> Add Radiograph</Button>
-              </div>
-              <EmptyState icon={ScanLine} title={t("radiology.empty")} description={t("radiology.empty_subtext")} />
+              <RadiologyGallery patientId={patient.id} />
             </TabsContent>
 
             {/* Tab 7: Treatment Plan */}

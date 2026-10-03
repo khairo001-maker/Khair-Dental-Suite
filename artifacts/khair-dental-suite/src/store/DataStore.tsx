@@ -258,14 +258,14 @@ export function DataStoreProvider({ children }: { children: React.ReactNode }) {
         addPatient: (p) => {
           const id = generateId();
           const timestamp = now();
-          const year = new Date().getFullYear();
-          const next = patients.reduce((max, patient) => {
-            const match = patient.patientNumber?.match(/^KD-\d{4}-(\d{6})$/);
-            return match && patient.patientNumber?.startsWith(`KD-${year}-`) ? Math.max(max, Number(match[1])) : max;
-          }, 0) + 1;
-          const record = { ...p, id, patientNumber: p.patientNumber ?? `KD-${year}-${String(next).padStart(6, "0")}`, createdAt: timestamp, updatedAt: timestamp };
+          const record = { ...p, id, createdAt: timestamp, updatedAt: timestamp };
           setPatients(prev => [...prev, record]);
-          persist(repositories.patients.put(record as any));
+          patientService.create(p, id).then(saved => {
+            setPatients(prev => prev.map(patient => patient.id === id ? { ...patient, patientNumber: saved.patientNumber, createdAt: saved.createdAt, updatedAt: saved.updatedAt } : patient));
+          }).catch(error => {
+            console.error("Unable to create patient in local database", error);
+            setPatients(prev => prev.filter(patient => patient.id !== id));
+          });
         },
         updatePatient: (id, updates) => {
           setPatients(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));

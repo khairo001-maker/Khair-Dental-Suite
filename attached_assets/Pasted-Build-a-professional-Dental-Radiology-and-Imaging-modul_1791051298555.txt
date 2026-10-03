@@ -1,0 +1,233 @@
+Build a professional Dental Radiology and Imaging module.
+
+IMPORTANT:
+- Preserve ALL existing functionality.
+- Do not rebuild or remove Patients, Odontogram, Tooth Clinical Record, Visits, Treatment Plans, Financial, or Clinical Photography.
+- Do not add a backend.
+- Keep the application offline-first.
+- Do not use fake patient data.
+- Do not upload medical images to external services.
+
+GOAL:
+Create a radiology/imaging system that allows dental radiographs to be stored locally and linked to the patient, visit, and optionally a specific tooth.
+
+1. RADIOLOGY SECTION
+
+Add a Radiology section inside the Patient Profile.
+
+Allow radiographs to be associated with:
+
+- Patient
+- Visit (optional)
+- Tooth (optional)
+- Treatment Plan item (optional)
+
+Use IDs and relationships instead of duplicating data.
+
+2. RADIOGRAPH TYPES
+
+Support these categories:
+
+- Periapical (PA)
+- Bitewing
+- Panoramic (OPG)
+- Occlusal
+- Cephalometric
+- CBCT
+- Other
+
+3. IMPORT RADIOGRAPHS
+
+Allow the user to:
+
+- Select one image/file
+- Select multiple images/files
+- Import from the device
+- Preview before saving
+- Cancel import
+- Delete using soft deletion
+
+Support common image formats:
+
+- JPEG
+- JPG
+- PNG
+- WEBP
+- HEIC when supported
+
+Also prepare the architecture for:
+
+- DICOM
+- DICOM ZIP/series
+
+Do NOT implement a full DICOM viewer yet.
+
+4. RADIOGRAPH METADATA
+
+Each radiograph should contain:
+
+- Radiograph ID
+- Patient ID
+- Visit ID (optional)
+- Tooth ID (optional)
+- Treatment Plan ID (optional)
+- Type
+- Date
+- Description
+- Clinical indication
+- Findings / notes
+- File reference
+- CreatedAt
+- UpdatedAt
+- DeletedAt
+
+5. RADIOGRAPH GALLERY
+
+Create a tablet-friendly gallery/list.
+
+Show:
+
+- Thumbnail
+- Type
+- Date
+- Tooth
+- Visit
+- Description
+
+Provide filters:
+
+- Type
+- Date
+- Tooth
+- Visit
+
+6. IMAGE VIEWER
+
+When the user opens a radiograph:
+
+Provide:
+
+- Full-screen viewing
+- Zoom
+- Pan
+- Rotate when supported
+- Fit to screen
+- Reset view
+
+Do not alter the original file.
+
+7. RADIOGRAPH DETAILS
+
+Show:
+
+- Image/file
+- Type
+- Date
+- Patient
+- Tooth
+- Visit
+- Clinical indication
+- Findings
+- Notes
+
+Allow editing metadata.
+
+8. CBCT / DICOM PREPARATION
+
+Create a separate data model for future DICOM studies.
+
+Prepare types/interfaces for:
+
+- DicomStudy
+- DicomSeries
+- DicomInstance
+
+A DICOM study may contain multiple series and multiple images.
+
+Do NOT implement:
+
+- 3D reconstruction
+- MPR
+- MIP
+- CBCT measurements
+- DICOM server
+- Cloud storage
+
+Only prepare the architecture and UI placeholder for future implementation.
+
+9. LOCAL STORAGE
+
+Use IndexedDB/Dexie-compatible architecture.
+
+Do not store large image files as base64 inside normal database records.
+
+Create a dedicated local attachment/file storage layer.
+
+Preserve original files.
+
+Create optimized thumbnails/previews where appropriate.
+
+10. CLINICAL NOTES
+
+Allow the clinician to add findings to a radiograph.
+
+Example fields:
+
+- Findings
+- Impression
+- Recommendations
+- Notes
+
+These are clinician-entered fields and must not be automatically generated.
+
+11. SECURITY & PRIVACY
+
+Radiographs are patient medical data.
+
+- Store locally.
+- Do not upload externally.
+- Do not use external image hosting.
+- Do not expose files publicly.
+- Prepare for future encrypted local storage.
+
+12. DATA ARCHITECTURE
+
+Create clean TypeScript types/interfaces for:
+
+- Radiograph
+- RadiographType
+- RadiographAttachment
+- DicomStudy
+- DicomSeries
+- DicomInstance
+
+Create repository/service methods for:
+
+- Import
+- Save
+- Retrieve
+- Update metadata
+- Delete
+- Search
+- Filter
+- Retrieve by patient
+- Retrieve by visit
+- Retrieve by tooth
+
+13. UX
+
+Optimize for:
+
+- iPad
+- Android tablets
+- Touch interaction
+- Large controls
+- Arabic and English
+- Existing design system
+
+14. IMPORTANT
+
+Do not break existing modules.
+Do not use mock data.
+Do not introduce a backend.
+Do not upload patient images or radiographs anywhere.

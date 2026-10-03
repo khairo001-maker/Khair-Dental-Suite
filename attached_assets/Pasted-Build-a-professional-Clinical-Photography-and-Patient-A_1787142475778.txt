@@ -1,0 +1,228 @@
+Build a professional Clinical Photography and Patient Attachments module.
+
+IMPORTANT:
+- Preserve ALL existing functionality.
+- Do not rebuild or remove Patients, Odontogram, Tooth Clinical Record, Visits, Treatment Plans, or Financial modules.
+- Do not add a backend.
+- Keep the application offline-first.
+- Do not use fake patient data.
+
+GOAL:
+Allow the clinician to import clinical images from the iPad/iPhone/Android device and prepare the application for direct camera capture.
+
+1. CLINICAL PHOTOS
+
+Create a Clinical Photos section inside the Patient Profile.
+
+Allow photos to be associated with:
+
+- Patient
+- Visit
+- Tooth (optional)
+- Treatment Plan item (optional)
+
+Use IDs rather than duplicating records.
+
+2. PHOTO IMPORT
+
+Implement device photo/file selection using the browser/device file picker.
+
+The user must be able to:
+
+- Select one image
+- Select multiple images
+- Import images from the device
+- Preview selected images before saving
+- Cancel an import
+- Delete an imported photo using soft deletion
+
+Accepted formats:
+
+- JPEG
+- JPG
+- PNG
+- WEBP
+- HEIC when supported by the device/browser
+
+Do not upload images to an external server.
+
+3. CAMERA PREPARATION
+
+Prepare the architecture for direct camera capture using the device camera.
+
+If the browser/device supports camera access, provide a "Take Photo" action.
+
+Request camera permission only when the user chooses to take a photo.
+
+Do not request camera permission on application startup.
+
+4. PHOTO CATEGORIES
+
+Create predefined clinical photography categories:
+
+- Extraoral
+- Frontal
+- Right lateral
+- Left lateral
+- Maxillary occlusal
+- Mandibular occlusal
+- Retracted frontal
+- Retracted right
+- Retracted left
+- Before treatment
+- During treatment
+- After treatment
+- Shade
+- Smile
+- Other
+
+Allow a custom category.
+
+5. PHOTO METADATA
+
+Each clinical photo must contain:
+
+- Photo ID
+- Patient ID
+- Visit ID (optional)
+- Tooth ID (optional)
+- Treatment Plan ID (optional)
+- Category
+- Caption
+- Date taken
+- CreatedAt
+- UpdatedAt
+- DeletedAt
+- Local file reference
+
+Do not store unnecessary personal metadata.
+
+6. PHOTO GALLERY
+
+Create a responsive clinical photo gallery.
+
+Requirements:
+
+- Large thumbnails
+- Grid layout optimized for iPad
+- Full-screen image preview
+- Swipe between images where supported
+- Category filtering
+- Date filtering
+- Visit filtering
+- Tooth filtering
+- Before/After grouping
+
+7. PHOTO DETAILS
+
+When opening a photo, show:
+
+- Large image
+- Category
+- Date
+- Tooth
+- Visit
+- Caption
+- Edit metadata
+- Delete
+
+8. BEFORE / AFTER
+
+Create a Before & After view.
+
+Allow the clinician to select:
+
+- Before image
+- After image
+
+Display them side by side on tablets.
+
+Do not modify the original image files.
+
+9. IMAGE STORAGE
+
+Prepare the application for local offline storage.
+
+Use IndexedDB/Dexie-compatible architecture.
+
+Store image blobs/files locally rather than converting large images into base64 strings inside normal database records.
+
+Create a separate attachment/file storage layer.
+
+Do not use cloud storage.
+
+10. IMAGE OPTIMIZATION
+
+Prepare client-side image processing for large photographs.
+
+Requirements:
+
+- Preserve the original image.
+- Create an optimized preview/thumbnail.
+- Do not reduce the original unnecessarily.
+- Keep image processing local on the device.
+
+11. SECURITY & PRIVACY
+
+Clinical photos are patient medical data.
+
+Therefore:
+
+- Do not send images to external services.
+- Do not use external image hosting.
+- Do not expose images publicly.
+- Use local storage only.
+- Prepare the architecture for future encrypted local storage.
+
+12. SHARING / EXPORT PREPARATION
+
+Prepare architecture for future:
+
+- Export selected photos
+- Share selected photos
+- Export a clinical case
+
+Do not implement cloud sharing yet.
+
+13. UI / UX
+
+Optimize for:
+
+- iPad
+- Android tablets
+- Touch interaction
+- Large buttons
+- Fast photo access
+- Arabic and English
+
+Use the existing application design system.
+
+14. DATA ARCHITECTURE
+
+Create clean TypeScript types/interfaces for:
+
+- ClinicalPhoto
+- PhotoCategory
+- PhotoAttachment
+- PhotoFilter
+
+Create services/repositories for:
+
+- Import photo
+- Save photo
+- Retrieve photos
+- Update photo metadata
+- Delete photo
+- Retrieve photos by patient
+- Retrieve photos by visit
+- Retrieve photos by tooth
+
+Use IDs and relationships.
+
+15. IMPORTANT
+
+Do not implement a backend.
+Do not upload patient images anywhere.
+Do not use mock data.
+Do not break existing functionality.
+Do not remove existing modules.
