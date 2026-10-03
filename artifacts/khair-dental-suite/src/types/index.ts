@@ -337,6 +337,118 @@ export interface PhotoEntry {
   notes: string;
 }
 
+export type PhotoCategory =
+  | 'Extraoral' | 'Frontal' | 'Right lateral' | 'Left lateral'
+  | 'Maxillary occlusal' | 'Mandibular occlusal' | 'Retracted frontal'
+  | 'Retracted right' | 'Retracted left' | 'Before treatment'
+  | 'During treatment' | 'After treatment' | 'Shade' | 'Smile' | 'Other';
+
+export interface ClinicalPhoto {
+  id: string;
+  patientId: string;
+  visitId?: string;
+  toothNumber?: number;
+  treatmentPlanItemId?: string;
+  category: PhotoCategory;
+  customCategory?: string;
+  caption: string;
+  dateTaken: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string;
+  localFileReference: string;
+}
+
+export interface PhotoAttachment {
+  id: string;
+  photoId: string;
+  originalBlob: Blob;
+  previewBlob: Blob;
+  mimeType: string;
+  originalSize: number;
+  previewSize: number;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string;
+}
+
+export interface PhotoFilter {
+  category?: PhotoCategory;
+  date?: string;
+  visitId?: string;
+  toothNumber?: number;
+}
+
+export type RadiographType = 'Periapical' | 'Bitewing' | 'Panoramic (OPG)' | 'Occlusal' | 'Cephalometric' | 'CBCT' | 'Other';
+
+export interface Radiograph {
+  id: string;
+  patientId: string;
+  visitId?: string;
+  toothNumber?: number;
+  treatmentPlanItemId?: string;
+  type: RadiographType;
+  date: string;
+  description: string;
+  clinicalIndication: string;
+  findings: string;
+  impression: string;
+  recommendations: string;
+  notes: string;
+  fileReference: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string;
+}
+
+export interface RadiographAttachment {
+  id: string;
+  radiographId: string;
+  originalBlob: Blob;
+  previewBlob?: Blob;
+  mimeType: string;
+  originalSize: number;
+  previewSize: number;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string;
+}
+
+export interface DicomStudy {
+  id: string;
+  patientId: string;
+  visitId?: string;
+  toothNumber?: number;
+  treatmentPlanItemId?: string;
+  studyDate: string;
+  description: string;
+  seriesIds: string[];
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string;
+}
+
+export interface DicomSeries {
+  id: string;
+  studyId: string;
+  modality: string;
+  description: string;
+  instanceIds: string[];
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string;
+}
+
+export interface DicomInstance {
+  id: string;
+  seriesId: string;
+  fileReference: string;
+  instanceNumber?: number;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string;
+}
+
 // ── Legacy Odontogram (preserved for backward compatibility) ──
 export type ToothCondition = 'Healthy' | 'Caries' | 'Filled (amalgam)' | 'Filled (composite)' | 'Crown' | 'Missing' | 'Implant' | 'Root Canal';
 

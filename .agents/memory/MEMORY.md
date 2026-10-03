@@ -1,0 +1,1 @@
+- [Offline clinical media](offline-clinical-media.md) — clinical photos and radiographs must remain local; never upload or seed fake patient records.
