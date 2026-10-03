@@ -24,7 +24,7 @@ export default function FinancialDashboard() {
   const month = sumSince(startOfMonth);
 
   const balances = patients.map(patient => currencies.map(currency => {
-    const cost = treatmentPlanItems.filter(i => i.patientId === patient.id && i.status !== "Cancelled" && (i.estimatedCost || 0) > 0).reduce((s, i) => s + (i.estimatedCost || 0), 0);
+    const cost = treatmentPlanItems.filter(i => i.patientId === patient.id && !i.deletedAt && i.status !== "Cancelled" && (i.currency || "USD") === currency && (i.estimatedCost || 0) > 0).reduce((s, i) => s + (i.estimatedCost || 0), 0);
     const paid = activePayments.filter(p => p.patientId === patient.id && p.currency === currency).reduce((s, p) => s + p.amount, 0);
     return { patient, currency, balance: cost - paid };
   })).flat().filter(x => x.balance > 0);
