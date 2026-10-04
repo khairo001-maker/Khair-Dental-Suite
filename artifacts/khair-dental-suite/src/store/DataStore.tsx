@@ -33,6 +33,7 @@ import {
   PaymentAllocation,
 } from '../types';
 import { repositories } from "@/db/repository";
+import { db } from "@/db/schema";
 import { patientService } from "@/db/services";
 
 interface DataStoreContextType {
@@ -108,7 +109,7 @@ interface DataStoreContextType {
   // ── Interactive Odontogram ────────────────────────────────
   /** Per-tooth status records — one per (patientId, toothNumber) */
   toothRecords: ToothRecord[];
-  setToothStatus: (patientId: string, toothNumber: number, status: ToothStatus) => void;
+  setToothStatus: (patientId: string, toothNumber: number, status: ToothStatus) => Promise<void>;
   getToothRecord: (patientId: string, toothNumber: number) => ToothRecord | undefined;
 
   toothDiagnoses: ToothDiagnosis[];
@@ -271,7 +272,7 @@ export function DataStoreProvider({ children }: { children: React.ReactNode }) {
         for (const record of merged) {
           const key = `${record.patientId}:${record.toothNumber}`;
           const previous = byTooth.get(key);
-          if (!previous || record.lastUpdated.localeCompare(previous.lastUpdated) > 0) byTooth.set(key, record);
+          if (!previous || (record.lastUpdated || "").localeCompare(previous.lastUpdated || "") > 0) byTooth.set(key, record);
         }
         return [...byTooth.values()];
       });
@@ -298,39 +299,25 @@ export function DataStoreProvider({ children }: { children: React.ReactNode }) {
     task.catch(error => console.error("Unable to persist local database change", error));
   };
 
-  const setToothStatus = (patientId: string, toothNumber: number, status: ToothStatus) => {
+  const setToothStatus = async (patientId: string, toothNumber: number, status: ToothStatus) => {
     const timestamp = now();
     const existing = toothRecords.find(r => r.patientId === patientId && r.toothNumber === toothNumber);
-    const record: ToothRecord = {
-      id: existing?.id ?? generateId(), patientId, toothNumber, status, lastUpdated: timestamp,
-    };
+    const saved = await db.transaction("rw", db.odontogramRecords, async () => {
+      const previous = await db.odontogramRecords.get([patientId, toothNumber]);
+      const record = {
+        id: previous?.id ?? existing?.id ?? `${patientId}:${toothNumber}`,
+        patientId, toothNumber, status, lastUpdated: timestamp,
+        createdAt: previous?.createdAt ?? timestamp,
+        updatedAt: timestamp,
+        deletedAt: undefined,
+      };
+      await db.odontogramRecords.put(record as any);
+      return record;
+    });
     setToothRecords(prev => [
-      record,
+      saved as ToothRecord,
       ...prev.filter(r => r.patientId !== patientId || r.toothNumber !== toothNumber),
     ]);
-    persist(db.transaction("rw", db.odontogramRecords, async () => {
-      const matches = await db.odontogramRecords
-        .where("[patientId+toothNumber]")
-        .equals([patientId, toothNumber])
-        .toArray();
-      const activeMatches = matches.filter(match => !match.deletedAt);
-      const keeper = activeMatches.sort((a, b) =>
-        (b.lastUpdated || b.updatedAt).localeCompare(a.lastUpdated || a.updatedAt))[0];
-      const saved = {
-        ...record,
-        id: keeper?.id ?? record.id,
-        createdAt: keeper?.createdAt ?? timestamp,
-        updatedAt: timestamp,
-      };
-      await db.odontogramRecords.put(saved as any);
-      await Promise.all(matches.filter(match => match.id !== saved.id).map(match => db.odontogramRecords.delete(match.id)));
-      return saved;
-    }).then(saved => {
-      setToothRecords(prev => [
-        saved as ToothRecord,
-        ...prev.filter(r => r.patientId !== patientId || r.toothNumber !== toothNumber),
-      ]);
-    }));
   };
 
   const getToothRecord = (patientId: string, toothNumber: number) =>
