@@ -1,0 +1,189 @@
+CRITICAL PERSISTENCE BUG — ODONTOGRAM DATA IS LOST AFTER REFRESH
+
+We discovered a real data-persistence problem during integration testing.
+
+Observed behavior:
+- Patient record itself persists correctly after browser/app refresh.
+- However, data entered/modified in the patient's Odontogram is lost after refresh.
+- Therefore, patient persistence works, but Odontogram persistence or rehydration is broken.
+
+DO NOT ADD NEW FEATURES.
+DO NOT redesign the UI.
+DO NOT change the existing Odontogram functionality unnecessarily.
+
+Your task is to diagnose and FIX the persistence problem at the architecture/data layer.
+
+Please perform a complete investigation of the current Odontogram implementation.
+
+1. TRACE THE DATA FLOW
+
+Identify exactly:
+- Where Odontogram state is created.
+- Where tooth data is stored in React/component state, context, Zustand/store, or any other state manager.
+- Where tooth data is persisted.
+- Which IndexedDB/Dexie/localStorage tables/stores are used.
+- How patientId is associated with odontogram/tooth records.
+- How toothId/FDI number is stored.
+- How Odontogram data is loaded when opening a patient.
+- What happens after a full page refresh.
+- Whether the Odontogram is merely stored in memory while the patient record is persisted separately.
+
+2. CHECK FOR DUPLICATE SOURCES OF TRUTH
+
+Look for situations such as:
+- Patient data stored in IndexedDB but Odontogram stored only in React state.
+- Odontogram data stored in one store while the patient profile reads from another.
+- Different patient IDs being used by the patient record and odontogram.
+- Temporary/local IDs being regenerated after reload.
+- FDI tooth numbers being used inconsistently as IDs.
+- Updates being made to UI state without writing them to persistence.
+- Persistence occurring on one event but not on another.
+- Data being written correctly but not rehydrated when the patient is reopened.
+
+3. VERIFY THE DATA MODEL
+
+The Odontogram must have a stable relationship:
+
+Patient
+  ↓
+patientId
+  ↓
+Odontogram / Tooth Records
+  ↓
+stable toothId / FDI tooth number
+
+Existing tooth clinical data must remain linked to the correct patient.
+
+Do NOT create duplicate patient or tooth records.
+
+4. FIX PERSISTENCE
+
+Implement the smallest robust architectural fix necessary so that every clinically relevant Odontogram change is persisted automatically.
+
+The following must survive:
+- Tooth status
+- Diagnoses
+- Treatment history
+- Restorations
+- RCT/endodontic status if currently implemented
+- Crown
+- Implant
+- Extraction
+- Periodontal notes
+- Treatment-plan references
+- Clinical-photo references
+- Radiograph references
+- Tooth timeline/history
+- Any other existing Odontogram data currently supported by the application
+
+Use the application's existing offline-first persistence architecture whenever possible.
+
+Do NOT introduce a backend or cloud database.
+
+Do NOT store clinical images as base64 if the current architecture already uses local blobs/files.
+
+5. REHYDRATION
+
+When:
+- opening an existing patient,
+- navigating back to a patient,
+- refreshing the application,
+
+the Odontogram must load the persisted tooth data associated with that patient.
+
+The UI must not initialize an empty/default Odontogram and accidentally overwrite persisted data.
+
+Be especially careful about initialization order and race conditions.
+
+6. TEST THE FIX
+
+After implementing the fix, perform these tests:
+
+TEST A:
+1. Create a test patient.
+2. Open Odontogram.
+3. Modify at least 3 different teeth.
+4. Add different data to each tooth.
+5. Navigate away.
+6. Return to the patient.
+7. Confirm all data remains.
+
+TEST B:
+1. With the same patient and modified teeth, perform a full browser/app refresh.
+2. Reopen the patient.
+3. Confirm every Odontogram modification remains.
+
+TEST C:
+1. Close/reopen the published application.
+2. Reopen the same patient.
+3. Confirm the Odontogram remains intact.
+
+TEST D:
+1. Modify one tooth.
+2. Verify that the change persists.
+3. Modify a different tooth.
+4. Verify that the first tooth was not overwritten.
+5. Verify that no duplicate tooth records were created.
+
+TEST E:
+1. Create two separate patients.
+2. Give each patient different Odontogram data.
+3. Refresh.
+4. Confirm Patient A only sees Patient A's tooth data.
+5. Confirm Patient B only sees Patient B's tooth data.
+
+7. DATA INTEGRITY
+
+Check that fixing persistence does NOT break:
+- Patient records
+- Visits
+- Treatment plans
+- Financial records
+- Clinical photographs
+- Radiology
+- Tooth clinical timeline
+- Existing relationships between these modules
+
+Do not duplicate data unnecessarily.
+
+8. ERROR HANDLING
+
+Check browser console/runtime errors during:
+- saving a tooth,
+- loading the Odontogram,
+- refreshing,
+- reopening a patient.
+
+Fix any related errors.
+
+9. IMPORTANT
+
+Do not simply make the current screen appear persistent.
+
+The underlying data must actually be persisted and reloaded from the application's local database/storage.
+
+The final implementation must follow this principle:
+
+UI state
+    ↓
+persistent local data
+    ↓
+reload application
+    ↓
+rehydrate UI state
+
+10. FINAL REPORT
+
+When finished, report:
+
+- Root cause of the Odontogram persistence bug.
+- Exact files/components/services modified.
+- Storage mechanism used.
+- How patientId and toothId are linked.
+- How rehydration now works.
+- Tests performed and their results.
+- Whether any existing data could be affected.
+- Any remaining persistence risks.
+
+Do not add new modules or features during this task.
+This is a BUG FIX + DATA INTEGRITY task only.

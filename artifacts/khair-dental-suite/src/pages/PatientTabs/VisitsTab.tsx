@@ -109,7 +109,12 @@ export default function VisitsTab({ patientId, t }: { patientId: string; t: (key
     });
     storedDiagnoses.filter(d => !retainedDiagnosisIds.has(d.id)).forEach(d => deleteVisitDiagnosis(d.id));
     storedProcedures.filter(p => !retainedProcedureIds.has(p.id)).forEach(p => deleteVisitProcedure(p.id));
-    const treatmentPlanItemIds = [...new Set(procedures.map(p => p.treatmentPlanItemId).filter((id): id is string => Boolean(id)))];
+    const legacyPlanItemIds = (visits.find(v => v.id === visitId)?.treatmentPlanItemIds || [])
+      .filter(id => !storedProcedures.some(procedure => procedure.treatmentPlanItemId === id));
+    const treatmentPlanItemIds = [...new Set([
+      ...legacyPlanItemIds,
+      ...procedures.map(p => p.treatmentPlanItemId).filter((id): id is string => Boolean(id)),
+    ])];
     updateVisit(visitId, { ...draft, diagnosisIds, procedureIds, treatmentPlanItemIds, updatedAt: now });
     setOpen(false);
     reset();

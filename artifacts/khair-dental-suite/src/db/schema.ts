@@ -56,7 +56,7 @@ export class KhairDatabase extends Dexie {
   payments!: Table<DbPayment, string>;
   clinicalPhotos!: Table<DbClinicalPhoto, string>;
   radiographs!: Table<DbRadiograph, string>;
-  odontogramRecords!: Table<DbOdontogramRecord, string>;
+  odontogramRecords!: Table<DbOdontogramRecord, [string, number]>;
   documents!: Table<DbDocument, string>;
   clinicalPhotoRecords!: Table<DbClinicalPhotoRecord, string>;
   photoAttachments!: Table<DbPhotoAttachment, string>;

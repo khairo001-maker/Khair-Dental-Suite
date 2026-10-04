@@ -3,10 +3,10 @@ import { Table } from "dexie";
 
 export type NewEntity<T extends EntityMeta> = Omit<T, "id" | "createdAt" | "updatedAt" | "deletedAt">;
 
-export class Repository<T extends EntityMeta> {
-  constructor(private readonly table: Table<T, string>) {}
+export class Repository<T extends EntityMeta, Key = string> {
+  constructor(private readonly table: Table<T, Key>) {}
 
-  async get(id: string) {
+  async get(id: Key) {
     return this.table.get(id);
   }
 
@@ -27,7 +27,7 @@ export class Repository<T extends EntityMeta> {
     return record;
   }
 
-  async update(id: string, changes: Partial<Omit<T, "id" | "createdAt">>) {
+  async update(id: Key, changes: Partial<Omit<T, "id" | "createdAt">>) {
     const current = await this.table.get(id);
     if (!current) throw new Error(`Cannot update missing record: ${id}`);
     const record = { ...current, ...changes, id, createdAt: current.createdAt, updatedAt: new Date().toISOString() } as T;
@@ -35,7 +35,7 @@ export class Repository<T extends EntityMeta> {
     return record;
   }
 
-  async softDelete(id: string) {
+  async softDelete(id: Key) {
     return this.update(id, { deletedAt: new Date().toISOString() } as Partial<T>);
   }
 }

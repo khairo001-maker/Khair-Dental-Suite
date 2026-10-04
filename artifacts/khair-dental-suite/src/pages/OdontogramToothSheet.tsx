@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -115,6 +115,9 @@ function OverviewTab({
           rootCanalTreatments, toothCrowns, toothImplants, toothExtractions,
           periodontalEntries } = useDataStore();
   const [status, setStatus] = useState<ToothStatus>(currentStatus);
+  const [savingStatus, setSavingStatus] = useState(false);
+  const [statusSaveError, setStatusSaveError] = useState("");
+  useEffect(() => setStatus(currentStatus), [currentStatus, patientId, toothNumber]);
 
   const cfg = TOOTH_STATUS_CONFIG[status];
 
@@ -129,8 +132,17 @@ function OverviewTab({
     perio: periodontalEntries.filter(r => r.patientId === patientId && r.toothNumber === toothNumber).length,
   };
 
-  const handleSave = () => {
-    setToothStatus(patientId, toothNumber, status);
+  const handleSave = async () => {
+    setSavingStatus(true);
+    setStatusSaveError("");
+    try {
+      await setToothStatus(patientId, toothNumber, status);
+    } catch (error) {
+      console.error("Unable to save odontogram tooth status", error);
+      setStatusSaveError("The tooth status could not be saved on this device. Please retry.");
+    } finally {
+      setSavingStatus(false);
+    }
   };
 
   return (
@@ -163,10 +175,12 @@ function OverviewTab({
         <Button
           className="w-full min-h-[44px]"
           onClick={handleSave}
+          disabled={savingStatus}
           style={status !== currentStatus ? {} : { opacity: 0.7 }}
         >
-          {status === currentStatus ? 'Status saved' : `Set to "${cfg.label}"`}
+          {savingStatus ? "Saving…" : status === currentStatus ? 'Status saved' : `Set to "${cfg.label}"`}
         </Button>
+        {statusSaveError && <p role="alert" className="text-sm text-destructive">{statusSaveError}</p>}
       </div>
 
       {/* Record summary */}
@@ -272,7 +286,7 @@ function DiagnosisTab({ toothNumber, patientId }: { toothNumber: number; patient
 
 // ── Tab: Treatments ───────────────────────────────────────────────────────────
 function TreatmentsTab({ toothNumber, patientId }: { toothNumber: number; patientId: string }) {
-  const { toothTreatments, addToothTreatment, deleteToothTreatment, treatmentPlanItems } = useDataStore();
+  const { toothTreatments, addToothTreatment, deleteToothTreatment, treatmentPlanItems, visits } = useDataStore();
   const records = toothTreatments.filter(r => r.patientId === patientId && r.toothNumber === toothNumber);
 
   const [open, setOpen] = useState(false);
@@ -349,8 +363,16 @@ function TreatmentsTab({ toothNumber, patientId }: { toothNumber: number; patien
                   </Select>
                 </div>
                 <div>
-                  <Label className="text-xs">Visit ID</Label>
-                  <Input value={form.visitId} onChange={e => setForm(f => ({ ...f, visitId: e.target.value }))} placeholder="Optional" className="min-h-[44px] mt-1" />
+                  <Label className="text-xs">Visit</Label>
+                  <Select value={form.visitId || "none"} onValueChange={v => setForm(f => ({ ...f, visitId: v === "none" ? "" : v }))}>
+                    <SelectTrigger className="min-h-[44px] mt-1"><SelectValue placeholder="Optional — select a visit" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Not linked</SelectItem>
+                      {visits.filter(v => v.patientId === patientId && !v.deletedAt).map(v => (
+                        <SelectItem key={v.id} value={v.id}>{v.date} · {v.type}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="col-span-2">
                   <Label className="text-xs">Linked Treatment Plan Item</Label>
@@ -1284,40 +1306,40 @@ export function OdontogramToothSheet({
           {/* Tab bodies */}
           <div className="flex-1 overflow-y-auto">
             <div className="p-5">
-              <TabsContent value="overview" className="m-0 focus-visible:outline-none">
+              <TabsContent value="overview" key={`${patientId}:${toothNumber}`} className="m-0 focus-visible:outline-none">
                 <OverviewTab toothNumber={toothNumber} patientId={patientId} currentStatus={currentStatus} />
               </TabsContent>
-              <TabsContent value="timeline" className="m-0 focus-visible:outline-none">
+              <TabsContent value="timeline" key={`${patientId}:${toothNumber}`} className="m-0 focus-visible:outline-none">
                 <TimelineTab toothNumber={toothNumber} patientId={patientId} />
               </TabsContent>
-              <TabsContent value="diagnosis" className="m-0 focus-visible:outline-none">
+              <TabsContent value="diagnosis" key={`${patientId}:${toothNumber}`} className="m-0 focus-visible:outline-none">
                 <DiagnosisTab toothNumber={toothNumber} patientId={patientId} />
               </TabsContent>
-              <TabsContent value="treatments" className="m-0 focus-visible:outline-none">
+              <TabsContent value="treatments" key={`${patientId}:${toothNumber}`} className="m-0 focus-visible:outline-none">
                 <TreatmentsTab toothNumber={toothNumber} patientId={patientId} />
               </TabsContent>
-              <TabsContent value="restorations" className="m-0 focus-visible:outline-none">
+              <TabsContent value="restorations" key={`${patientId}:${toothNumber}`} className="m-0 focus-visible:outline-none">
                 <RestorationsTab toothNumber={toothNumber} patientId={patientId} />
               </TabsContent>
-              <TabsContent value="rct" className="m-0 focus-visible:outline-none">
+              <TabsContent value="rct" key={`${patientId}:${toothNumber}`} className="m-0 focus-visible:outline-none">
                 <RCTTab toothNumber={toothNumber} patientId={patientId} />
               </TabsContent>
-              <TabsContent value="crown" className="m-0 focus-visible:outline-none">
+              <TabsContent value="crown" key={`${patientId}:${toothNumber}`} className="m-0 focus-visible:outline-none">
                 <CrownTab toothNumber={toothNumber} patientId={patientId} />
               </TabsContent>
-              <TabsContent value="implant" className="m-0 focus-visible:outline-none">
+              <TabsContent value="implant" key={`${patientId}:${toothNumber}`} className="m-0 focus-visible:outline-none">
                 <ImplantTab toothNumber={toothNumber} patientId={patientId} />
               </TabsContent>
-              <TabsContent value="extraction" className="m-0 focus-visible:outline-none">
+              <TabsContent value="extraction" key={`${patientId}:${toothNumber}`} className="m-0 focus-visible:outline-none">
                 <ExtractionTab toothNumber={toothNumber} patientId={patientId} />
               </TabsContent>
-              <TabsContent value="perio" className="m-0 focus-visible:outline-none">
+              <TabsContent value="perio" key={`${patientId}:${toothNumber}`} className="m-0 focus-visible:outline-none">
                 <PerioTab toothNumber={toothNumber} patientId={patientId} />
               </TabsContent>
-              <TabsContent value="photos" className="m-0 focus-visible:outline-none">
+              <TabsContent value="photos" key={`${patientId}:${toothNumber}`} className="m-0 focus-visible:outline-none">
                 <PhotosTab toothNumber={toothNumber} patientId={patientId} />
               </TabsContent>
-              <TabsContent value="radiographs" className="m-0 focus-visible:outline-none">
+              <TabsContent value="radiographs" key={`${patientId}:${toothNumber}`} className="m-0 focus-visible:outline-none">
                 <RadiographsTab toothNumber={toothNumber} patientId={patientId} />
               </TabsContent>
             </div>
